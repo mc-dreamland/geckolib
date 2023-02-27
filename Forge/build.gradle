@@ -105,7 +105,7 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.2-40.1.84'
+    minecraft 'net.minecraftforge:forge:1.18.1-39.1.2'
     library 'com.eliotlash.mclib:mclib:20'
     library(project(':geckolib-core')) {
         exclude group: 'org.apache.commons'
@@ -128,8 +128,8 @@ dependencies {
     test {
         useJUnitPlatform()
     }
-	compileOnly fg.deobf("vazkii.patchouli:Patchouli:1.18.2-71.1:api")
-    compileOnly fg.deobf("vazkii.patchouli:Patchouli:1.18.2-71.1")
+	compileOnly fg.deobf("vazkii.patchouli:Patchouli:1.18.1-66-SNAPSHOT:api")
+    compileOnly fg.deobf("vazkii.patchouli:Patchouli:1.18.1-66-SNAPSHOT")
 }
 
 shadowJar {
@@ -248,7 +248,7 @@ if (file('key.properties').exists()) {
             releaseType = "release"
             changelogType = 'text'
             changelog = file('changelog.txt')
-        	addGameVersion("1.18.2")
+        	addGameVersion("1.18.1")
             addGameVersion("Forge")
             addGameVersion("Java 17")
         }
@@ -264,10 +264,10 @@ if (file('key.properties').exists()) {
 		token = modrinthProp.getProperty('modrinthKey')
 		projectId = '8BmcQJ2H' 
 		versionNumber = project.mod_version 
-		versionName = 'Forge 1.18.2'
+		versionName = 'Forge 1.18.1'
 		uploadFile = jar 
 		changelog = rootProject.file("changelog.txt").text
-		gameVersions = ['1.18.2']
+		gameVersions = ['1.18.1']
 		loaders = ['forge']
 	}
 }
