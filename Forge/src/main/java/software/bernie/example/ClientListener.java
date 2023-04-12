@@ -55,14 +55,14 @@ public class ClientListener {
 
 	@SubscribeEvent
 	public static void registerRenderers(final EntityRenderersEvent.AddLayers event) {
-		if (!FMLEnvironment.production && !GeckoLibMod.DISABLE_IN_DEV) {
+		if (!FMLEnvironment.production) {
 			GeoArmorRenderer.registerArmorRenderer(GeckoArmorItem.class, () -> new GeckoArmorRenderer());
 		}
 	}
 
 	@SubscribeEvent
 	public static void registerRenderers(final FMLClientSetupEvent event) {
-		if (!FMLEnvironment.production && !GeckoLibMod.DISABLE_IN_DEV) {
+		if (!FMLEnvironment.production) {
 			ItemBlockRenderTypes.setRenderLayer(BlockRegistry.HABITAT_BLOCK.get(), RenderType.cutout());
 		}
 	}
