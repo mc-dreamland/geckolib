@@ -9,8 +9,12 @@ import com.ayou.ChannelHandlerInput;
 import com.ayou.EventSubscribers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.PlayerHeadItem;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.api.distmarker.Dist;
@@ -18,11 +22,17 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
+import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import software.bernie.example.registry.BlockRegistry;
 import software.bernie.example.registry.EntityRegistry;
@@ -67,9 +77,10 @@ public class GeckoLibMod {
                 }
             };
         }
-        MinecraftForge.EVENT_BUS.register(new EventSubscribers());
         MinecraftForge.EVENT_BUS.register(new ChannelHandlerInput());
+        MinecraftForge.EVENT_BUS.register(new EventSubscribers());
     }
+
     public static void replaceTile(LevelChunk chunk){
         if (Minecraft.getInstance().level == null) return;
         List<SkullBlockEntity> collect = chunk.getBlockEntities().values().stream().filter(entity -> entity instanceof SkullBlockEntity)
@@ -84,6 +95,43 @@ public class GeckoLibMod {
                         map.put(blockPos,skullBlock.getOwnerProfile().getName());
                     }
                 });
+    }
+
+
+    // DROP Server Only
+    @SubscribeEvent
+    public static void onDrop(ItemTossEvent event){
+    }
+
+    public static String getSkullOwner(CompoundTag compoundtag){
+        String skullOwner = "";
+        if (compoundtag.contains("SkullOwner", 8)) {
+            skullOwner = compoundtag.getString("SkullOwner");
+        }else if (compoundtag.contains("SkullOwner", 10)) {
+            CompoundTag compoundtag1 = compoundtag.getCompound("SkullOwner");
+            if (compoundtag1.contains("Name", 8)) {
+                skullOwner = compoundtag1.getString("Name");
+            }
+        }
+        return skullOwner;
+    }
+
+    @SubscribeEvent
+    public static void onItem(TickEvent.PlayerTickEvent event){
+        if (!event.player.level.isClientSide) return;
+//        for (int i = 0; i < event.player.containerMenu.getItems().size(); i++) {
+//            ItemStack item = event.player.containerMenu.getItems().get(i);
+//            if (item.is(Items.PLAYER_HEAD)){
+//                if (item.getTag() != null){
+//                    CompoundTag compoundtag = item.getTag();
+//                    if (getSkullOwner(compoundtag).startsWith("geckolib:")){
+//                        event.player.getInventory().setItem(i, new ItemStack(BlockRegistry.FERTILIZER_BLOCK.get().asItem()));
+//                    }
+//                }
+//            }
+//        }
+//        event.player.getInventory().items.stream().filter(stack-> stack.is(Items.PLAYER_HEAD))
+//                .forEach(System.out::println);
     }
 
     @OnlyIn(Dist.CLIENT)

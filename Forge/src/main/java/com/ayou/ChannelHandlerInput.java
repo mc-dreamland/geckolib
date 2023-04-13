@@ -7,9 +7,6 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class ChannelHandlerInput {
-
-    public static Minecraft mc = Minecraft.getInstance();
-
     public static boolean firstConnection = true;
 
     @SubscribeEvent
