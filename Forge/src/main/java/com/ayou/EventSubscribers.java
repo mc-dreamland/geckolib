@@ -22,6 +22,10 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import software.bernie.example.GeckoLibMod;
 import software.bernie.example.registry.BlockRegistry;
@@ -30,13 +34,55 @@ import software.bernie.example.registry.ItemRegistry;
 import java.util.Objects;
 
 public class EventSubscribers {
+    @SubscribeEvent
+    public void onEntity(EntityEvent event){
+        if (Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) return;
+        if (event.getEntity() instanceof ItemEntity entity){
+            if (entity.getItem().is(Items.PLAYER_HEAD)){
+                if (entity.getItem().getTag() == null) return;
+                if (GeckoLibMod.getSkullOwner(entity.getItem().getTag()).startsWith("gecko")){
+                    entity.setItem(new ItemStack(ItemRegistry.FERTILIZER_ITEM.get()));
+                }
+            }
+        }
+    }
 
+    @SubscribeEvent
+    public void onJoinServer(PlayerEvent.PlayerLoggedInEvent event){
+            event.getPlayer().getInventory().items.stream()
+                    .filter(item->item.is(Items.PLAYER_HEAD))
+                    .filter(ItemStack::hasTag)
+                    .forEach(stack -> {
+                        int index = event.getPlayer().getInventory().findSlotMatchingItem(stack);
+                        String skullOwner = GeckoLibMod.getSkullOwner(stack.getTag());
+                        if (skullOwner.startsWith("gecko")){
+                            event.getPlayer().getInventory().items.set(index,new ItemStack(ItemRegistry.FERTILIZER_ITEM.get()));
+                        }
+                    });
+    }
+
+    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public void onBlockUpdate(PacketEvent event){
         // cancel right and left click
         if (event.getPacket() instanceof ClientboundBlockUpdatePacket packet){
             if (packet.getBlockState().getBlock() == Blocks.PLAYER_HEAD) event.setCanceled(true);
         }
+/*
+        if (event.getPacket() instanceof ClientboundPlayerInfoPacket packet){
+            if (Minecraft.getInstance().player == null) return;
+            Minecraft.getInstance().player.getInventory().items.stream()
+                    .filter(item->item.is(Items.PLAYER_HEAD))
+                    .filter(ItemStack::hasTag)
+                    .forEach(stack -> {
+                        int index = Minecraft.getInstance().player.getInventory().findSlotMatchingItem(stack);
+                        String skullOwner = GeckoLibMod.getSkullOwner(stack.getTag());
+                        if (skullOwner.startsWith("gecko")){
+                            Minecraft.getInstance().player.getInventory().items.set(index,new ItemStack(ItemRegistry.FERTILIZER_ITEM.get()));
+                        }
+                    });
+        }
+*/
         // place
         if (event.getPacket() instanceof ClientboundBlockEntityDataPacket entityDataPacket){
             if(!entityDataPacket.getType().equals(BlockEntityType.SKULL)) return;
@@ -89,7 +135,6 @@ public class EventSubscribers {
             if (packet.getSlotNum() == -999) return;
             if (packet.getChangedSlots().isEmpty()) event.setCanceled(true);
         }
-
         if (event.getPacket() instanceof ClientboundAddEntityPacket entityPacket){
             BlockPos blockPos = new BlockPos(entityPacket.getX(),entityPacket.getY(),entityPacket.getZ());
             if (Minecraft.getInstance().level == null) return;
@@ -109,13 +154,8 @@ public class EventSubscribers {
             });
         }
         if (event.getPacket() instanceof ClientboundSetEntityDataPacket packet) {
-            System.out.println(packet.getId());
             if (Minecraft.getInstance().level == null) return;
             Entity entity = Minecraft.getInstance().level.getEntity(packet.getId());
-            System.out.println(entity);
-        }
-        if (event.getPacket() instanceof ClientboundEntityEventPacket packet){
-            System.out.println(packet.getEntity(Minecraft.getInstance().level));
         }
     }
 
@@ -143,6 +183,7 @@ public class EventSubscribers {
                 || event.getPacket() instanceof ClientboundBlockUpdatePacket
                 || event.getPacket() instanceof ClientboundBlockEntityDataPacket
                 || event.getPacket() instanceof ClientboundAddMobPacket
+                || event.getPacket() instanceof ClientboundLevelChunkWithLightPacket
         || event.getPacket() instanceof ServerboundContainerClosePacket) return;
         Minecraft.getInstance().player.displayClientMessage(new TextComponent(event.getPacket().getClass().toGenericString()), false);
     }
