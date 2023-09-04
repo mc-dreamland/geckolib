@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import software.bernie.example.GeckoLibMod;
 import software.bernie.example.registry.BlockRegistry;
@@ -30,6 +31,21 @@ import software.bernie.example.registry.ItemRegistry;
 import java.util.Objects;
 
 public class EventSubscribers {
+
+
+    @SubscribeEvent
+    public void onTest(EntityJoinWorldEvent event){
+        Entity entity = event.getEntity();
+        if (entity instanceof ItemEntity itemEntity) {
+            if (itemEntity.getItem().is(Items.PLAYER_HEAD) && itemEntity.getItem().getTag() != null) {
+                String skullOwner = GeckoLibMod.getSkullOwner(itemEntity.getItem().getTag());
+                if (skullOwner.startsWith("gecko")){
+                    itemEntity.setItem(new ItemStack(ItemRegistry.FERTILIZER_ITEM.get()));
+                }
+            }
+        }
+
+    }
 
     @SubscribeEvent
     public void onBlockUpdate(PacketEvent event){
@@ -101,21 +117,10 @@ public class EventSubscribers {
                 if (entity.getItem().is(Items.PLAYER_HEAD) && entity.getItem().getTag() != null){
                     String skullOwner = GeckoLibMod.getSkullOwner(entity.getItem().getTag());
                     if (skullOwner.startsWith("gecko")){
-                        System.out.println("SkullID: "+entity.getId());
                         entity.setItem(new ItemStack(ItemRegistry.FERTILIZER_ITEM.get()));
-                        System.out.println(Minecraft.getInstance().level.getEntity(entity.getId()));
                     }
                 }
             });
-        }
-        if (event.getPacket() instanceof ClientboundSetEntityDataPacket packet) {
-            System.out.println(packet.getId());
-            if (Minecraft.getInstance().level == null) return;
-            Entity entity = Minecraft.getInstance().level.getEntity(packet.getId());
-            System.out.println(entity);
-        }
-        if (event.getPacket() instanceof ClientboundEntityEventPacket packet){
-            System.out.println(packet.getEntity(Minecraft.getInstance().level));
         }
     }
 
@@ -144,6 +149,6 @@ public class EventSubscribers {
                 || event.getPacket() instanceof ClientboundBlockEntityDataPacket
                 || event.getPacket() instanceof ClientboundAddMobPacket
         || event.getPacket() instanceof ServerboundContainerClosePacket) return;
-        Minecraft.getInstance().player.displayClientMessage(new TextComponent(event.getPacket().getClass().toGenericString()), false);
+//        Minecraft.getInstance().player.displayClientMessage(new TextComponent(event.getPacket().getClass().toGenericString()), false);
     }
 }
