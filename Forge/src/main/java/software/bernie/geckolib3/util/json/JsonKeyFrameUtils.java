@@ -5,6 +5,7 @@
 
 package software.bernie.geckolib3.util.json;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -41,8 +42,10 @@ public class JsonKeyFrameUtils {
 
 		for (int i = 0; i < element.size(); i++) {
 			Map.Entry<String, JsonElement> keyframe = element.get(i);
-			if (keyframe.getKey().equals("easing") || keyframe.getKey().equals("easingArgs"))
+			if (keyframe.getKey().equals("easing") || keyframe.getKey().equals("easingArgs")) {
 				continue;
+			}
+
 			Map.Entry<String, JsonElement> previousKeyFrame = i == 0 ? null : element.get(i - 1);
 
 			double previousKeyFrameLocation = previousKeyFrame == null ? 0
@@ -52,7 +55,19 @@ public class JsonKeyFrameUtils {
 					: 0;
 			double animationTimeDifference = currentKeyFrameLocation - previousKeyFrameLocation;
 
-			JsonArray vectorJsonArray = getKeyFrameVector(keyframe.getValue());
+			JsonElement value = keyframe.getValue();
+			JsonElement valueJsonElement = getKeyFrameVector(value);
+
+			if (!valueJsonElement.isJsonArray()) {
+				List<IValue> iValues = managePrePostKeyFrame(valueJsonElement, xKeyFrames, yKeyFrames, zKeyFrames, previousXValue, previousYValue, previousZValue, parser, isRotation, animationTimeDifference);
+
+				previousXValue = iValues.get(0);
+				previousYValue = iValues.get(1);
+				previousZValue = iValues.get(2);
+				continue;
+			}
+
+			JsonArray vectorJsonArray = valueJsonElement.getAsJsonArray();
 			IValue xValue = parseExpression(parser, vectorJsonArray.get(0));
 			IValue yValue = parseExpression(parser, vectorJsonArray.get(1));
 			IValue zValue = parseExpression(parser, vectorJsonArray.get(2));
@@ -110,11 +125,96 @@ public class JsonKeyFrameUtils {
 		return new VectorKeyFrameList<>(xKeyFrames, yKeyFrames, zKeyFrames);
 	}
 
-	private static JsonArray getKeyFrameVector(JsonElement element) {
+	private static List<IValue> managePrePostKeyFrame(JsonElement valueJsonElement, List<KeyFrame<IValue>> xKeyFrames,
+											  List<KeyFrame<IValue>> yKeyFrames, List<KeyFrame<IValue>> zKeyFrames,
+											  IValue previousXValue, IValue previousYValue, IValue previousZValue,
+											  MolangParser parser, boolean isRotation,
+											  double animationTimeDifference) throws NumberFormatException, MolangException {
+		JsonArray pre;
+		JsonArray post;
+		if (valueJsonElement.getAsJsonObject().get("pre").isJsonObject()) {
+			pre = valueJsonElement.getAsJsonObject().get("pre").getAsJsonObject().getAsJsonArray("vector");
+		} else {
+			pre = valueJsonElement.getAsJsonObject().get("pre").getAsJsonArray();
+		}
+		if (valueJsonElement.getAsJsonObject().get("post").isJsonObject()) {
+			post = valueJsonElement.getAsJsonObject().get("post").getAsJsonObject().getAsJsonArray("vector");
+		} else {
+			post = valueJsonElement.getAsJsonObject().get("post").getAsJsonArray();
+		}
+
+		IValue xValue = parseExpression(parser, pre.get(0));
+		IValue yValue = parseExpression(parser, pre.get(1));
+		IValue zValue = parseExpression(parser, pre.get(2));
+
+		IValue currentXValue = isRotation && xValue instanceof ConstantValue
+				? ConstantValue.fromDouble(Math.toRadians(-xValue.get()))
+				: xValue;
+		IValue currentYValue = isRotation && yValue instanceof ConstantValue
+				? ConstantValue.fromDouble(Math.toRadians(-yValue.get()))
+				: yValue;
+		IValue currentZValue = isRotation && zValue instanceof ConstantValue
+				? ConstantValue.fromDouble(Math.toRadians(zValue.get()))
+				: zValue;
+
+		KeyFrame xKeyFrame = new KeyFrame(AnimationUtils.convertSecondsToTicks(animationTimeDifference),
+				previousXValue == null ? currentXValue : previousXValue, currentXValue);
+		KeyFrame yKeyFrame = new KeyFrame(AnimationUtils.convertSecondsToTicks(animationTimeDifference),
+				previousYValue == null ? currentYValue : previousYValue, currentYValue);
+		KeyFrame zKeyFrame = new KeyFrame(AnimationUtils.convertSecondsToTicks(animationTimeDifference),
+				previousZValue == null ? currentZValue : previousZValue, currentZValue);
+
+		previousXValue = currentXValue;
+		previousYValue = currentYValue;
+		previousZValue = currentZValue;
+
+
+		xKeyFrames.add(xKeyFrame);
+		yKeyFrames.add(yKeyFrame);
+		zKeyFrames.add(zKeyFrame);
+
+		xValue = parseExpression(parser, post.get(0));
+		yValue = parseExpression(parser, post.get(1));
+		zValue = parseExpression(parser, post.get(2));
+
+		currentXValue = isRotation && xValue instanceof ConstantValue
+				? ConstantValue.fromDouble(Math.toRadians(-xValue.get()))
+				: xValue;
+		currentYValue = isRotation && yValue instanceof ConstantValue
+				? ConstantValue.fromDouble(Math.toRadians(-yValue.get()))
+				: yValue;
+		currentZValue = isRotation && zValue instanceof ConstantValue
+				? ConstantValue.fromDouble(Math.toRadians(zValue.get()))
+				: zValue;
+
+		xKeyFrame = new KeyFrame(1d,
+				previousXValue, currentXValue);
+		yKeyFrame = new KeyFrame(1d,
+				previousYValue, currentYValue);
+		zKeyFrame = new KeyFrame(1d,
+				previousZValue, currentZValue);
+
+		previousXValue = currentXValue;
+		previousYValue = currentYValue;
+		previousZValue = currentZValue;
+
+		xKeyFrames.add(xKeyFrame);
+		yKeyFrames.add(yKeyFrame);
+		zKeyFrames.add(zKeyFrame);
+
+		List<IValue> list = Arrays.asList(previousXValue, previousYValue, previousZValue);
+
+		return list;
+	}
+
+	private static JsonElement getKeyFrameVector(JsonElement element) {
 		if (element.isJsonArray()) {
 			return element.getAsJsonArray();
 		} else {
-			return element.getAsJsonObject().get("vector").getAsJsonArray();
+			if (element.getAsJsonObject().has("vector")) {
+				return element.getAsJsonObject().get("vector").getAsJsonArray();
+			}
+			return element;
 		}
 	}
 
