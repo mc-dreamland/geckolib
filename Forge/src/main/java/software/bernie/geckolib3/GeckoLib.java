@@ -8,10 +8,14 @@ import net.minecraftforge.fml.DistExecutor;
 import software.bernie.geckolib3.network.GeckoLibNetwork;
 import software.bernie.geckolib3.resource.ResourceListener;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class GeckoLib {
 	public static final Logger LOGGER = LogManager.getLogger();
 	public static final String ModID = "geckolib3";
 	public static volatile boolean hasInitialized;
+	public static ExecutorService executorService;
 	/**
 	 * Call this because you {@link #initialize()} if you are shadowing GeckoLib
 	 * into your mod and are not planning using items. This is the best fix I have
@@ -37,6 +41,7 @@ public class GeckoLib {
 			DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResourceListener::registerReloadListener);
 			GeckoLibNetwork.initialize();
 		}
+		executorService = Executors.newCachedThreadPool();
 		hasInitialized = true;
 	}
 }

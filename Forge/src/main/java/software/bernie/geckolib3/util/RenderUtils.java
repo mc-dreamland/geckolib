@@ -121,8 +121,8 @@ public final class RenderUtils {
 	}
 
 	public static void translateToPivotPoint(PoseStack poseStack, GeoCube cube) {
-		Vector3f pivot = cube.pivot;
-		poseStack.translate(pivot.x() / 16f, pivot.y() / 16f, pivot.z() / 16f);
+		Vector3f pivot = cube.pivotTTP;
+		poseStack.translate(pivot.x(), pivot.y(), pivot.z());
 	}
 
 	public static void translateToPivotPoint(PoseStack poseStack, GeoBone bone) {
@@ -130,8 +130,8 @@ public final class RenderUtils {
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoCube cube) {
-		Vector3f pivot = cube.pivot;
-		poseStack.translate(-pivot.x() / 16f, -pivot.y() / 16f, -pivot.z() / 16f);
+		Vector3f pivot = cube.pivotTTP;
+		poseStack.translate(-pivot.x(), -pivot.y(), -pivot.z());
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoBone bone) {

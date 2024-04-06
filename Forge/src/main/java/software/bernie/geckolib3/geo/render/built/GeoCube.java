@@ -18,6 +18,7 @@ public class GeoCube {
 	public Vector3f size = new Vector3f();
 	public double inflate;
 	public Boolean mirror;
+	public Vector3f pivotTTP; // translateToPivotPoint
 
 	private GeoCube(double[] size) {
 		if (size.length >= 3) {
@@ -214,6 +215,8 @@ public class GeoCube {
 		cube.quads[3] = quadSouth;
 		cube.quads[4] = quadUp;
 		cube.quads[5] = quadDown;
+
+		cube.pivotTTP = new Vector3f(cube.pivot.x() / 16f, cube.pivot.y() / 16f, cube.pivot.z() / 16f);
 		return cube;
 	}
 }
