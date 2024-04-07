@@ -39,9 +39,17 @@ public class GeoBone implements IBone {
 	private float positionY;
 	private float positionZ;
 
+	public float positionXTTP;
+	public float positionYTTP;
+	public float positionZTTP;
+
 	public float rotationPointX;
 	public float rotationPointY;
 	public float rotationPointZ;
+
+	public float rotationPointXTTP;
+	public float rotationPointYTTP;
+	public float rotationPointZTTP;
 
 	private float rotateX;
 	private float rotateY;
@@ -157,16 +165,19 @@ public class GeoBone implements IBone {
 	@Override
 	public void setPositionX(float value) {
 		this.positionX = value;
+		this.positionXTTP = value / 16F;
 	}
 
 	@Override
 	public void setPositionY(float value) {
 		this.positionY = value;
+		this.positionYTTP = value / 16F;
 	}
 
 	@Override
 	public void setPositionZ(float value) {
 		this.positionZ = value;
+		this.positionZTTP = value / 16F;
 	}
 
 	@Override
@@ -197,16 +208,19 @@ public class GeoBone implements IBone {
 	@Override
 	public void setPivotX(float value) {
 		this.rotationPointX = value;
+		this.rotationPointXTTP = value / 16.0F;
 	}
 
 	@Override
 	public void setPivotY(float value) {
 		this.rotationPointY = value;
+		this.rotationPointYTTP = value / 16.0F;
 	}
 
 	@Override
 	public void setPivotZ(float value) {
 		this.rotationPointZ = value;
+		this.rotationPointZTTP = value / 16.0F;
 	}
 
 	@Override

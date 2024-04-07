@@ -65,6 +65,10 @@ public class GeoBuilder implements IGeoBuilder {
         geoBone.rotationPointY = pivot.y();
         geoBone.rotationPointZ = pivot.z();
 
+        geoBone.rotationPointXTTP = -pivot.x() / 16f;
+        geoBone.rotationPointYTTP = pivot.y() / 16f;
+        geoBone.rotationPointZTTP = pivot.z() / 16f;
+
         if (!ArrayUtils.isEmpty(rawBone.getCubes())) {
             for (Cube cube : rawBone.getCubes()) {
                 geoBone.childCubes.add(GeoCube.createFromPojoCube(cube, properties,

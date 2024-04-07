@@ -91,7 +91,7 @@ public final class RenderUtils {
 	}
 
 	public static void translateMatrixToBone(PoseStack poseStack, GeoBone bone) {
-		poseStack.translate(-bone.getPositionX() / 16f, bone.getPositionY() / 16f, bone.getPositionZ() / 16f);
+		poseStack.translate(-bone.positionXTTP, bone.positionYTTP, bone.positionZTTP);
 	}
 
 	public static void rotateMatrixAroundBone(PoseStack poseStack, GeoBone bone) {
@@ -126,7 +126,7 @@ public final class RenderUtils {
 	}
 
 	public static void translateToPivotPoint(PoseStack poseStack, GeoBone bone) {
-		poseStack.translate(bone.rotationPointX / 16f, bone.rotationPointY / 16f, bone.rotationPointZ / 16f);
+		poseStack.translate(bone.rotationPointXTTP, bone.rotationPointYTTP, bone.rotationPointZTTP);
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoCube cube) {
@@ -135,7 +135,7 @@ public final class RenderUtils {
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoBone bone) {
-		poseStack.translate(-bone.rotationPointX / 16f, -bone.rotationPointY / 16f, -bone.rotationPointZ / 16f);
+		poseStack.translate(-bone.rotationPointXTTP, -bone.rotationPointYTTP, -bone.rotationPointZTTP);
 	}
 
 	public static void translateAndRotateMatrixForBone(PoseStack poseStack, GeoBone bone) {

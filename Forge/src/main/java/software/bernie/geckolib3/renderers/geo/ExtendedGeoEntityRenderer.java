@@ -147,7 +147,7 @@ public abstract class ExtendedGeoEntityRenderer<T extends LivingEntity & IAnimat
 			float relativeScaleZ = 1.1875F;
 
 			// Calculate scale in relation to a vanilla head (8x8x8 units)
-			if (bone.childCubes.size() > 0) {
+			if (!bone.childCubes.isEmpty()) {
 				GeoCube firstCube = bone.childCubes.get(0);
 				relativeScaleX *= firstCube.size.x() / 8f;
 				relativeScaleY *= firstCube.size.y() / 8f;
