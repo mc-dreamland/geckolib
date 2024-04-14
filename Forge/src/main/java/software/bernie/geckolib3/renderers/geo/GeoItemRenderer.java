@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import org.jetbrains.annotations.ApiStatus.AvailableSince;
 
 import com.mojang.blaze3d.platform.Lighting;
@@ -176,6 +177,10 @@ public abstract class GeoItemRenderer<T extends Item & IAnimatable> extends Bloc
 			localMatrix.translate(new Vector3f(getRenderOffset(this.animatable, 1)));
 			bone.setLocalSpaceXform(localMatrix);
 		}
+
+		RenderType renderType = getRenderType(animatable, 0, poseStack, rtb, null, packedLight,
+				getTextureLocation(animatable));
+		buffer = ItemRenderer.getFoilBufferDirect(rtb, renderType, false, this.currentItemStack != null && this.currentItemStack.hasFoil());
 
 		IGeoRenderer.super.renderRecursively(bone, poseStack, buffer, packedLight, packedOverlay, red, green, blue,
 				alpha);
