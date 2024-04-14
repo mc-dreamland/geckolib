@@ -34,39 +34,37 @@ public abstract class AnimatedTickingGeoModel<T extends IAnimatable & IAnimation
 		// Each animation has its own collection of animations (called the
 		// EntityAnimationManager), which allows for multiple independent animations
 
-		GeckoLib.executorService.submit(() -> {
 
-			AnimationData manager = animatable.getFactory().getOrCreateAnimationData(instanceId);
-			if (manager.startTick == -1) {
-				manager.startTick = (animatable.tickTimer() + Minecraft.getInstance().getFrameTime());
-			}
+		AnimationData manager = animatable.getFactory().getOrCreateAnimationData(instanceId);
+		if (manager.startTick == -1) {
+			manager.startTick = (animatable.tickTimer() + Minecraft.getInstance().getFrameTime());
+		}
 
-			if (!Minecraft.getInstance().isPaused() || manager.shouldPlayWhilePaused) {
-				manager.tick = (animatable.tickTimer() + Minecraft.getInstance().getFrameTime());
-				double gameTick = manager.tick;
-				double deltaTicks = gameTick - lastGameTickTime;
-				seekTime += deltaTicks;
-				lastGameTickTime = gameTick;
-			}
+		if (!Minecraft.getInstance().isPaused() || manager.shouldPlayWhilePaused) {
+			manager.tick = (animatable.tickTimer() + Minecraft.getInstance().getFrameTime());
+			double gameTick = manager.tick;
+			double deltaTicks = gameTick - lastGameTickTime;
+			seekTime += deltaTicks;
+			lastGameTickTime = gameTick;
+		}
 
-			AnimationEvent<T> predicate;
-			if (animationEvent == null) {
-				predicate = new AnimationEvent<T>(animatable, 0, 0, 0, false, Collections.emptyList());
-			} else {
-				predicate = animationEvent;
-			}
+		AnimationEvent<T> predicate;
+		if (animationEvent == null) {
+			predicate = new AnimationEvent<T>(animatable, 0, 0, 0, false, Collections.emptyList());
+		} else {
+			predicate = animationEvent;
+		}
 
-			predicate.animationTick = seekTime;
-			getAnimationProcessor().preAnimationSetup(predicate.getAnimatable(), seekTime);
-			if (!this.getAnimationProcessor().getModelRendererList().isEmpty()) {
-				getAnimationProcessor().tickAnimation(animatable, instanceId, seekTime, predicate,
-						GeckoLibCache.getInstance().parser, shouldCrashOnMissing);
-			}
+		predicate.animationTick = seekTime;
+		getAnimationProcessor().preAnimationSetup(predicate.getAnimatable(), seekTime);
+		if (!this.getAnimationProcessor().getModelRendererList().isEmpty()) {
+			getAnimationProcessor().tickAnimation(animatable, instanceId, seekTime, predicate,
+					GeckoLibCache.getInstance().parser, shouldCrashOnMissing);
+		}
 
-			if (!Minecraft.getInstance().isPaused() || manager.shouldPlayWhilePaused) {
-				codeAnimations(animatable, instanceId, animationEvent);
-			}
-		});
+		if (!Minecraft.getInstance().isPaused() || manager.shouldPlayWhilePaused) {
+			codeAnimations(animatable, instanceId, animationEvent);
+		}
 	}
 
 	public void codeAnimations(T entity, Integer uniqueID, AnimationEvent<?> customPredicate) {

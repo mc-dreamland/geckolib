@@ -85,6 +85,10 @@ public class MolangParser extends MathBuilder {
 		register(new LazyVariable("query.time_of_day", 0));
 		register(new LazyVariable("query.is_on_fire", 0));
 		register(new LazyVariable("query.ground_speed", 0));
+		register(new LazyVariable("query.has_armor_slot(0)", 0));
+		register(new LazyVariable("query.has_armor_slot(1)", 0));
+		register(new LazyVariable("query.has_armor_slot(2)", 0));
+		register(new LazyVariable("query.has_armor_slot(3)", 0));
 	}
 
 	@Override
