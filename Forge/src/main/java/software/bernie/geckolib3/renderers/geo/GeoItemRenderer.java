@@ -35,6 +35,7 @@ import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoBone;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
+import software.bernie.geckolib3.renderers.texture.AnimatableTexture;
 import software.bernie.geckolib3.util.EModelRenderCycle;
 import software.bernie.geckolib3.util.GeckoLibUtil;
 import software.bernie.geckolib3.util.IRenderCycle;
@@ -139,7 +140,7 @@ public abstract class GeoItemRenderer<T extends Item & IAnimatable> extends Bloc
 		this.dispatchedMat = poseStack.last().pose().copy();
 
 		setCurrentModelRenderCycle(EModelRenderCycle.INITIAL);
-		this.modelProvider.setLivingAnimations(animatable, getInstanceId(animatable), animationEvent); // TODO change to
+		this.modelProvider.setCustomAnimations(animatable, getInstanceId(animatable), animationEvent); // TODO change to
 																										// setCustomAnimations
 																										// in 1.20+
 		poseStack.pushPose();
@@ -217,5 +218,17 @@ public abstract class GeoItemRenderer<T extends Item & IAnimatable> extends Bloc
 	@Override
 	public MultiBufferSource getCurrentRTB() {
 		return this.rtb;
+	}
+
+	/**
+	 * Update the current frame of a {@link AnimatableTexture potentially animated} texture used by this GeoRenderer
+	 * <p>
+	 * This should only be called immediately prior to rendering
+	 *
+	 * @see AnimatableTexture#setAndUpdate
+	 */
+	@Override
+	public void updateAnimatedTextureFrame(T animatable) {
+		AnimatableTexture.setAndUpdate(getTextureLocation(animatable));
 	}
 }

@@ -108,12 +108,17 @@ public final class RenderUtils {
 		}
 	}
 
+//	public static void rotateMatrixAroundCube(PoseStack poseStack, GeoCube cube) {
+//		Vector3f rotation = cube.rotation;
+//
+//		poseStack.mulPose(new Quaternion(0, 0, rotation.z(), false));
+//		poseStack.mulPose(new Quaternion(0, rotation.y(), 0, false));
+//		poseStack.mulPose(new Quaternion(rotation.x(), 0, 0, false));
+//	}
 	public static void rotateMatrixAroundCube(PoseStack poseStack, GeoCube cube) {
-		Vector3f rotation = cube.rotation;
-
-		poseStack.mulPose(new Quaternion(0, 0, rotation.z(), false));
-		poseStack.mulPose(new Quaternion(0, rotation.y(), 0, false));
-		poseStack.mulPose(new Quaternion(rotation.x(), 0, 0, false));
+		for (Quaternion quaternion : cube.getCachedRotation()) {
+			poseStack.mulPose(quaternion);
+		}
 	}
 
 	public static void scaleMatrixForBone(PoseStack poseStack, GeoBone bone) {
@@ -121,8 +126,7 @@ public final class RenderUtils {
 	}
 
 	public static void translateToPivotPoint(PoseStack poseStack, GeoCube cube) {
-		Vector3f pivot = cube.pivotTTP;
-		poseStack.translate(pivot.x(), pivot.y(), pivot.z());
+		poseStack.translate(cube.pivotTTP.x(), cube.pivotTTP.y(), cube.pivotTTP.z());
 	}
 
 	public static void translateToPivotPoint(PoseStack poseStack, GeoBone bone) {
@@ -130,8 +134,7 @@ public final class RenderUtils {
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoCube cube) {
-		Vector3f pivot = cube.pivotTTP;
-		poseStack.translate(-pivot.x(), -pivot.y(), -pivot.z());
+		poseStack.translate(-cube.pivotTTP.x(), -cube.pivotTTP.y(), -cube.pivotTTP.z());
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoBone bone) {

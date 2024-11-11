@@ -40,6 +40,7 @@ import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 import software.bernie.geckolib3.model.provider.GeoModelProvider;
 import software.bernie.geckolib3.model.provider.data.EntityModelData;
+import software.bernie.geckolib3.renderers.texture.AnimatableTexture;
 import software.bernie.geckolib3.util.AnimationUtils;
 import software.bernie.geckolib3.util.EModelRenderCycle;
 import software.bernie.geckolib3.util.IRenderCycle;
@@ -182,7 +183,7 @@ public abstract class GeoEntityRenderer<T extends LivingEntity & IAnimatable> ex
 				(limbSwingAmount <= -getSwingMotionAnimThreshold() || limbSwingAmount > getSwingMotionAnimThreshold()), Collections.singletonList(entityModelData));
 		GeoModel model = this.modelProvider.getModel(this.modelProvider.getModelLocation(animatable));
 
-		this.modelProvider.setLivingAnimations(animatable, getInstanceId(animatable), predicate); // TODO change to setCustomAnimations in 1.20+
+		this.modelProvider.setCustomAnimations(animatable, getInstanceId(animatable), predicate); // TODO change to setCustomAnimations in 1.20+
 
 		poseStack.translate(0, 0.01f, 0);
 		RenderSystem.setShaderTexture(0, getTextureLocation(animatable));
@@ -490,5 +491,17 @@ public abstract class GeoEntityRenderer<T extends LivingEntity & IAnimatable> ex
 	@Deprecated(forRemoval = true)
 	protected float getLerpedAge(T animatable, float partialTick) {
 		return animatable.tickCount + partialTick;
+	}
+
+	/**
+	 * Update the current frame of a {@link AnimatableTexture potentially animated} texture used by this GeoRenderer
+	 * <p>
+	 * This should only be called immediately prior to rendering
+	 *
+	 * @see AnimatableTexture#setAndUpdate
+	 */
+	@Override
+	public void updateAnimatedTextureFrame(T animatable) {
+		AnimatableTexture.setAndUpdate(getTextureLocation(animatable));
 	}
 }

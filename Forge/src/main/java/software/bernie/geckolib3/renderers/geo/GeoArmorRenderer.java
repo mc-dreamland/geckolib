@@ -33,6 +33,7 @@ import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoBone;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
+import software.bernie.geckolib3.renderers.texture.AnimatableTexture;
 import software.bernie.geckolib3.util.EModelRenderCycle;
 import software.bernie.geckolib3.util.GeoUtils;
 import software.bernie.geckolib3.util.IRenderCycle;
@@ -187,7 +188,7 @@ public abstract class GeoArmorRenderer<T extends ArmorItem & IAnimatable> extend
 
 		this.dispatchedMat = poseStack.last().pose().copy();
 
-		this.modelProvider.setLivingAnimations(this.currentArmorItem, getInstanceId(this.currentArmorItem), animationEvent); // TODO change to setCustomAnimations in 1.20+
+		this.modelProvider.setCustomAnimations(this.currentArmorItem, getInstanceId(this.currentArmorItem), animationEvent); // TODO change to setCustomAnimations in 1.20+
 		setCurrentModelRenderCycle(EModelRenderCycle.INITIAL);
 		fitToBiped();
 		RenderSystem.setShaderTexture(0, getTextureLocation(this.currentArmorItem));
@@ -456,5 +457,16 @@ public abstract class GeoArmorRenderer<T extends ArmorItem & IAnimatable> extend
 	@Override
 	public MultiBufferSource getCurrentRTB() {
 		return this.rtb;
+	}
+
+	/**
+	 * Update the current frame of a {@link AnimatableTexture potentially animated} texture used by this GeoRenderer.<br>
+	 * This should only be called immediately prior to rendering, and only
+	 * @see AnimatableTexture#setAndUpdate(ResourceLocation, int)
+	 */
+	@Override
+	public void updateAnimatedTextureFrame(T animatable) {
+		if (this.entityLiving != null)
+			AnimatableTexture.setAndUpdate(getTextureLocation(animatable));
 	}
 }

@@ -1,5 +1,6 @@
 package software.bernie.geckolib3.geo.render.built;
 
+import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
 
 import net.minecraft.core.Direction;
@@ -19,11 +20,21 @@ public class GeoCube {
 	public double inflate;
 	public Boolean mirror;
 	public Vector3f pivotTTP; // translateToPivotPoint
+	// 新增缓存的 Quaternion
+	private Quaternion[] cachedRotation;
 
 	private GeoCube(double[] size) {
 		if (size.length >= 3) {
 			this.size.set((float) size[0], (float) size[1], (float) size[2]);
 		}
+	}
+
+	public Quaternion[] getCachedRotation() {
+		cachedRotation = new Quaternion[3];
+		cachedRotation[0] = new Quaternion(0, 0, rotation.z(), false);
+		cachedRotation[1] = new Quaternion(0, rotation.y(), 0, false);
+		cachedRotation[2] = new Quaternion(rotation.x(), 0, 0, false);
+		return cachedRotation;
 	}
 
 	public static GeoCube createFromPojoCube(Cube cubeIn, ModelProperties properties, Double boneInflate,
@@ -217,6 +228,13 @@ public class GeoCube {
 		cube.quads[5] = quadDown;
 
 		cube.pivotTTP = new Vector3f(cube.pivot.x() / 16f, cube.pivot.y() / 16f, cube.pivot.z() / 16f);
+
+		cube.getCachedRotation();
 		return cube;
+	}
+
+	// In the GeoCube class, add the following method:
+	public GeoQuad getFaceInDirection(Direction direction) {
+		return quads[direction.ordinal()];
 	}
 }

@@ -25,6 +25,7 @@ import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 import software.bernie.geckolib3.model.provider.GeoModelProvider;
 import software.bernie.geckolib3.model.provider.data.EntityModelData;
+import software.bernie.geckolib3.renderers.texture.AnimatableTexture;
 import software.bernie.geckolib3.util.AnimationUtils;
 import software.bernie.geckolib3.util.EModelRenderCycle;
 import software.bernie.geckolib3.util.IRenderCycle;
@@ -69,7 +70,7 @@ public class GeoProjectilesRenderer<T extends Entity & IAnimatable> extends Enti
 		AnimationEvent<T> predicate = new AnimationEvent<T>(animatable, 0, 0, partialTick,
 				false, Collections.singletonList(new EntityModelData()));
 
-		modelProvider.setLivingAnimations(animatable, getInstanceId(animatable), predicate); // TODO change to setCustomAnimations in 1.20+
+		modelProvider.setCustomAnimations(animatable, getInstanceId(animatable), predicate); // TODO change to setCustomAnimations in 1.20+
 		RenderSystem.setShaderTexture(0, getTextureLocation(animatable));
 
 		Color renderColor = getRenderColor(animatable, partialTick, poseStack, bufferSource, null, packedLight);
@@ -180,6 +181,18 @@ public class GeoProjectilesRenderer<T extends Entity & IAnimatable> extends Enti
 	@Override
 	public MultiBufferSource getCurrentRTB() {
 		return this.rtb;
+	}
+
+	/**
+	 * Update the current frame of a {@link AnimatableTexture potentially animated} texture used by this GeoRenderer
+	 * <p>
+	 * This should only be called immediately prior to rendering
+	 *
+	 * @see AnimatableTexture#setAndUpdate
+	 */
+	@Override
+	public void updateAnimatedTextureFrame(T animatable) {
+		AnimatableTexture.setAndUpdate(getTextureLocation(animatable));
 	}
 
 }

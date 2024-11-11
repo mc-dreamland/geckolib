@@ -38,6 +38,7 @@ import software.bernie.geckolib3.geo.render.built.GeoBone;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 import software.bernie.geckolib3.model.provider.data.EntityModelData;
+import software.bernie.geckolib3.renderers.texture.AnimatableTexture;
 import software.bernie.geckolib3.util.EModelRenderCycle;
 import software.bernie.geckolib3.util.IRenderCycle;
 import software.bernie.geckolib3.util.RenderUtils;
@@ -195,7 +196,7 @@ public abstract class GeoReplacedEntityRenderer<T extends IAnimatable> extends E
 		AnimationEvent predicate = new AnimationEvent(animatable, limbSwing, limbSwingAmount, partialTick,
 				(limbSwingAmount <= -getSwingMotionAnimThreshold() || limbSwingAmount <= getSwingMotionAnimThreshold()), Collections.singletonList(entityModelData));
 
-		this.modelProvider.setLivingAnimations(animatable, getInstanceId(entity), predicate); // TODO change to setCustomAnimations in 1.20+
+		this.modelProvider.setCustomAnimations(animatable, getInstanceId(entity), predicate); // TODO change to setCustomAnimations in 1.20+
 		poseStack.translate(0, 0.01f, 0);
 		RenderSystem.setShaderTexture(0, getTextureLocation(entity));
 

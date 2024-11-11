@@ -13,6 +13,7 @@ buildscript {
         classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.4.0'        
         classpath 'org.parchmentmc:librarian:1.+'
         classpath "com.modrinth.minotaur:Minotaur:2.1.2"
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
@@ -23,6 +24,7 @@ apply plugin: 'java'
 apply plugin: 'com.matthewprenger.cursegradle'
 apply plugin: 'org.parchmentmc.librarian.forgegradle'
 apply plugin: "com.modrinth.minotaur"
+apply plugin: 'org.spongepowered.mixin'
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -87,6 +89,11 @@ minecraft {
     }
 }
 
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
+}
+
 minecraft.runs.all {
     lazyToken('minecraft_classpath') {
         configurations.library.copyRecursive().resolve().collect { it.absolutePath }.join(File.pathSeparator)
@@ -124,6 +131,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.6.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     test {
         useJUnitPlatform()

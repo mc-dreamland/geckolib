@@ -29,6 +29,8 @@ public interface IGeoRenderer<T> {
 	default void render(GeoModel model, T animatable, float partialTick, RenderType type, PoseStack poseStack,
 			@Nullable MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, int packedLight,
 			int packedOverlay, float red, float green, float blue, float alpha) {
+		updateAnimatedTextureFrame(animatable);
+
 		setCurrentRTB(bufferSource);
 		renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight,
 				packedOverlay, red, green, blue, alpha);
@@ -89,11 +91,16 @@ public interface IGeoRenderer<T> {
 		Matrix3f normalisedPoseState = poseStack.last().normal();
 		Matrix4f poseState = poseStack.last().pose();
 
+		final Vector3f normal = new Vector3f();
+
 		for (GeoQuad quad : cube.quads) {
 			if (quad == null)
 				continue;
 
-			Vector3f normal = quad.normal.copy();
+//			Vector3f normal = quad.normal.copy();
+			normal.setX(quad.normal.x());
+			normal.setY(quad.normal.y());
+			normal.setZ(quad.normal.z());
 
 			normal.transform(normalisedPoseState);
 
@@ -115,8 +122,13 @@ public interface IGeoRenderer<T> {
 
 	default void createVerticesOfQuad(GeoQuad quad, Matrix4f poseState, Vector3f normal, VertexConsumer buffer,
 			int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+
+		final Vector4f vector4f = new Vector4f();
+		vector4f.setW(1);
 		for (GeoVertex vertex : quad.vertices) {
-			Vector4f vector4f = new Vector4f(vertex.position.x(), vertex.position.y(), vertex.position.z(), 1);
+			vector4f.setX(vertex.position.x());
+			vector4f.setY(vertex.position.y());
+			vector4f.setZ(vertex.position.z());
 
 			vector4f.transform(poseState);
 			buffer.vertex(vector4f.x(), vector4f.y(), vector4f.z(), red, green, blue, alpha, vertex.textureU,
@@ -189,5 +201,14 @@ public interface IGeoRenderer<T> {
 	@Deprecated(forRemoval = true)
 	default void preparePositionRotationScale(GeoBone bone, PoseStack poseStack) {
 		RenderUtils.prepMatrixForBone(poseStack, bone);
+	}
+
+	/**
+	 * Update the current frame of a {@link software.bernie.geckolib3.renderers.texture.AnimatableTexture potentially animated} texture used by this GeoRenderer.<br>
+	 * This should only be called immediately prior to rendering, and only
+	 * @see software.bernie.geckolib3.renderers.texture.AnimatableTexture#setAndUpdate(ResourceLocation, int)
+	 */
+	default void updateAnimatedTextureFrame(T animatable) {
+
 	}
 }

@@ -27,6 +27,7 @@ import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoBone;
 import software.bernie.geckolib3.geo.render.built.GeoModel;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
+import software.bernie.geckolib3.renderers.texture.AnimatableTexture;
 import software.bernie.geckolib3.util.EModelRenderCycle;
 import software.bernie.geckolib3.util.IRenderCycle;
 import software.bernie.geckolib3.util.RenderUtils;
@@ -207,5 +208,18 @@ public abstract class GeoBlockRenderer<T extends BlockEntity & IAnimatable>
 	@Override
 	public MultiBufferSource getCurrentRTB() {
 		return this.rtb;
+	}
+
+
+	/**
+	 * Update the current frame of a {@link AnimatableTexture potentially animated} texture used by this GeoRenderer
+	 * <p>
+	 * This should only be called immediately prior to rendering
+	 *
+	 * @see AnimatableTexture#setAndUpdate
+	 */
+	@Override
+	public void updateAnimatedTextureFrame(T animatable) {
+		AnimatableTexture.setAndUpdate(getTextureLocation(animatable));
 	}
 }
