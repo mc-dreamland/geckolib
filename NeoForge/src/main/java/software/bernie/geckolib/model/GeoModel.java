@@ -5,6 +5,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.ApiStatus;
@@ -246,6 +247,11 @@ public abstract class GeoModel<T extends GeoAnimatable> implements CoreGeoModel<
 					return Mth.sqrt((float) ((velocity.x * velocity.x) + (velocity.z * velocity.z)));
 				});
 				parser.setMemoizedValue(MolangQueries.YAW_SPEED, () -> livingEntity.getViewYRot((float)animTime - livingEntity.getViewYRot((float)animTime - 0.1f)));
+				parser.setMemoizedValue(MolangQueries.HAS_ARMOR_SLOT_0, () -> RenderUtils.booleanToFloat(!livingEntity.getItemBySlot(EquipmentSlot.HEAD).isEmpty()));
+				parser.setMemoizedValue(MolangQueries.HAS_ARMOR_SLOT_1, () -> RenderUtils.booleanToFloat(!livingEntity.getItemBySlot(EquipmentSlot.CHEST).isEmpty()));
+				parser.setMemoizedValue(MolangQueries.HAS_ARMOR_SLOT_2, () -> RenderUtils.booleanToFloat(!livingEntity.getItemBySlot(EquipmentSlot.LEGS).isEmpty()));
+				parser.setMemoizedValue(MolangQueries.HAS_ARMOR_SLOT_3, () -> RenderUtils.booleanToFloat(!livingEntity.getItemBySlot(EquipmentSlot.FEET).isEmpty()));
+
 			}
 		}
 	}
