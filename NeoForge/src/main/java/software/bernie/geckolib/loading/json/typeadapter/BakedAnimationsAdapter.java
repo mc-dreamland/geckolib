@@ -21,6 +21,7 @@ import software.bernie.geckolib.loading.object.BakedAnimations;
 import software.bernie.geckolib.util.JsonUtil;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -150,12 +151,22 @@ public class BakedAnimationsAdapter implements JsonDeserializer<BakedAnimations>
 			String key = entry.getFirst();
 			JsonElement element = entry.getSecond();
 
-			if (key.equals("easing") || key.equals("easingArgs") || key.equals("lerp_mode"))
+			if (key.equals("easing") || key.equals("easingArgs") || key.equals("lerp_mode")) {
 				continue;
+			}
 
 			double prevTime = prevEntry != null ? Double.parseDouble(prevEntry.getFirst()) : 0;
 			double curTime = NumberUtils.isCreatable(key) ? Double.parseDouble(entry.getFirst()) : 0;
 			double timeDelta = curTime - prevTime;
+
+			if (element instanceof JsonObject obj && (obj.has("pre") || obj.has("post"))) {
+				List<IValue> iValues = managePrePostKeyFrame(element, xFrames, yFrames, zFrames, xPrev, yPrev, zPrev, isForRotation, timeDelta);
+
+				xPrev = iValues.get(0);
+				yPrev = iValues.get(1);
+				zPrev = iValues.get(2);
+				continue;
+			}
 
 			JsonArray keyFrameVector = element instanceof JsonArray array ? array : GsonHelper.getAsJsonArray(element.getAsJsonObject(), "vector");
 			MolangValue rawXValue = MolangParser.parseJson(keyFrameVector.get(0));
@@ -182,6 +193,60 @@ public class BakedAnimationsAdapter implements JsonDeserializer<BakedAnimations>
 		}
 
 		return new KeyframeStack<>(xFrames, yFrames, zFrames);
+	}
+
+	private static List<IValue> managePrePostKeyFrame(JsonElement element, List<Keyframe<IValue>> xFrames, List<Keyframe<IValue>> yFrames, List<Keyframe<IValue>> zFrames,
+													  IValue xPrev, IValue yPrev, IValue zPrev, boolean isForRotation, double timeDelta) throws MolangException {
+		JsonObject keyframeObj = element.getAsJsonObject();
+		JsonArray pre = keyframeObj.has("pre") ? getKeyframeVector(keyframeObj.get("pre")) : null;
+		JsonArray post = keyframeObj.has("post") ? getKeyframeVector(keyframeObj.get("post")) : null;
+
+		if (pre != null) {
+			IValue xValue = parseExpression(pre.get(0), isForRotation);
+			IValue yValue = parseExpression(pre.get(1), isForRotation);
+			IValue zValue = parseExpression(pre.get(2), isForRotation);
+
+			xFrames.add(new Keyframe<>(timeDelta * 20, xPrev == null ? xValue : xPrev, xValue, EasingType.LINEAR, List.of()));
+			yFrames.add(new Keyframe<>(timeDelta * 20, yPrev == null ? yValue : yPrev, yValue, EasingType.LINEAR, List.of()));
+			zFrames.add(new Keyframe<>(timeDelta * 20, zPrev == null ? zValue : zPrev, zValue, EasingType.LINEAR, List.of()));
+
+			xPrev = xValue;
+			yPrev = yValue;
+			zPrev = zValue;
+		}
+
+		if (post != null) {
+			IValue xValue = parseExpression(post.get(0), isForRotation);
+			IValue yValue = parseExpression(post.get(1), isForRotation);
+			IValue zValue = parseExpression(post.get(2), isForRotation);
+
+			xFrames.add(new Keyframe<>(1d * 20, xPrev, xValue, EasingType.LINEAR, List.of()));
+			yFrames.add(new Keyframe<>(1d * 20, yPrev, yValue, EasingType.LINEAR, List.of()));
+			zFrames.add(new Keyframe<>(1d * 20, zPrev, zValue, EasingType.LINEAR, List.of()));
+
+			xPrev = xValue;
+			yPrev = yValue;
+			zPrev = zValue;
+		}
+
+		return Arrays.asList(xPrev, yPrev, zPrev);
+	}
+
+	private static JsonArray getKeyframeVector(JsonElement element) {
+		if (element.isJsonArray()) {
+			return element.getAsJsonArray();
+		} else if (element.isJsonObject() && element.getAsJsonObject().has("vector")) {
+			return element.getAsJsonObject().get("vector").getAsJsonArray();
+		}
+		return null;
+	}
+
+	private static IValue parseExpression(JsonElement element, boolean isForRotation) throws MolangException {
+		MolangValue value = MolangParser.parseJson(element);
+		if (isForRotation && value.isConstant()) {
+			return new Constant(Math.toRadians(value.get()));
+		}
+		return value;
 	}
 
 	private static double calculateAnimationLength(BoneAnimation[] boneAnimations) {
