@@ -3,6 +3,7 @@ package software.bernie.geckolib.cache.object;
 import org.joml.Vector3f;
 
 import net.minecraft.core.Direction;
+import software.bernie.geckolib.loading.json.raw.FaceUV;
 
 /**
  * Quad data holder

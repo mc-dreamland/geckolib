@@ -161,7 +161,7 @@ public interface BakedModelFactory {
 			Vec3 size = RenderUtils.arrayToVec(cube.size());
 			Vec3 origin = RenderUtils.arrayToVec(cube.origin());
 			Vec3 rotation = RenderUtils.arrayToVec(cube.rotation());
-			Vec3 pivot = RenderUtils.arrayToVec(cube.pivot());
+			Vec3 pivot = RenderUtils.arrayToVecTTP(cube.pivot());
 			origin = new Vec3(-(origin.x + size.x) / 16d, origin.y / 16d, origin.z / 16d);
 			Vec3 vertexSize = size.multiply(1 / 16d, 1 / 16d, 1 / 16d);
 
@@ -177,7 +177,7 @@ public interface BakedModelFactory {
 	 * Holder class to make it easier to store and refer to vertices for a given cube
 	 */
 	record VertexSet(GeoVertex bottomLeftBack, GeoVertex bottomRightBack, GeoVertex topLeftBack, GeoVertex topRightBack,
-							GeoVertex topLeftFront, GeoVertex topRightFront, GeoVertex bottomLeftFront, GeoVertex bottomRightFront) {
+					 GeoVertex topLeftFront, GeoVertex topRightFront, GeoVertex bottomLeftFront, GeoVertex bottomRightFront) {
 		public VertexSet(Vec3 origin, Vec3 vertexSize, double inflation) {
 			this(
 					new GeoVertex(origin.x - inflation, origin.y - inflation, origin.z - inflation),

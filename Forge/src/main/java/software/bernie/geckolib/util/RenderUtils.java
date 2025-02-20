@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
  */
 public final class RenderUtils {
 	public static void translateMatrixToBone(PoseStack poseStack, CoreGeoBone bone) {
-		poseStack.translate(-bone.getPosX() / 16f, bone.getPosY() / 16f, bone.getPosZ() / 16f);
+		poseStack.translate(-bone.getPosX_TTP(), bone.getPosY_TTP(), bone.getPosZ_TTP());
 	}
 
 	public static void rotateMatrixAroundBone(PoseStack poseStack, CoreGeoBone bone) {
@@ -69,21 +69,20 @@ public final class RenderUtils {
 
 	public static void translateToPivotPoint(PoseStack poseStack, GeoCube cube) {
 		Vec3 pivot = cube.pivot();
-		poseStack.translate(pivot.x() / 16f, pivot.y() / 16f, pivot.z() / 16f);
+		poseStack.translate(pivot.x, pivot.y, pivot.z);
 	}
 
 	public static void translateToPivotPoint(PoseStack poseStack, CoreGeoBone bone) {
-		poseStack.translate(bone.getPivotX() / 16f, bone.getPivotY() / 16f, bone.getPivotZ() / 16f);
+		poseStack.translate(bone.getPivotX_TTP(), bone.getPivotY_TTP(), bone.getPivotZ_TTP());
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoCube cube) {
 		Vec3 pivot = cube.pivot();
-
-		poseStack.translate(-pivot.x() / 16f, -pivot.y() / 16f, -pivot.z() / 16f);
+		poseStack.translate(-pivot.x(), -pivot.y(), -pivot.z());
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, CoreGeoBone bone) {
-		poseStack.translate(-bone.getPivotX() / 16f, -bone.getPivotY() / 16f, -bone.getPivotZ() / 16f);
+		poseStack.translate(-bone.getPivotX_TTP(), -bone.getPivotY_TTP(), -bone.getPivotZ_TTP());
 	}
 
 	public static void translateAndRotateMatrixForBone(PoseStack poseStack, CoreGeoBone bone) {
@@ -194,6 +193,13 @@ public final class RenderUtils {
 	 */
 	public static Vec3 arrayToVec(double[] array) {
 		return new Vec3(array[0], array[1], array[2]);
+	}
+
+	/**
+	 * Converts a given double array to its {@link Vec3} equivalent
+	 */
+	public static Vec3 arrayToVecTTP(double[] array) {
+		return new Vec3(array[0] / 16.0F, array[1] / 16.0F, array[2] / 16.0F);
 	}
 
 	/**

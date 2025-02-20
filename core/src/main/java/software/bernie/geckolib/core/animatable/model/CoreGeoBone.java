@@ -25,6 +25,12 @@ public interface CoreGeoBone {
 
 	float getPosZ();
 
+	float getPosX_TTP();
+
+	float getPosY_TTP();
+
+	float getPosZ_TTP();
+
 	float getScaleX();
 
 	float getScaleY();
@@ -84,6 +90,12 @@ public interface CoreGeoBone {
 	float getPivotY();
 
 	float getPivotZ();
+
+	float getPivotX_TTP();
+
+	float getPivotY_TTP();
+
+	float getPivotZ_TTP();
 
 	boolean isHidden();
 

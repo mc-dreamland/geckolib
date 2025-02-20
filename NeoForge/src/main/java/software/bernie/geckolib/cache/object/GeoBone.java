@@ -22,7 +22,7 @@ public class GeoBone implements CoreGeoBone {
 
 	private final List<GeoBone> children = new ObjectArrayList<>();
 	private final List<GeoCube> cubes = new ObjectArrayList<>();
-	
+
 	private final Boolean mirror;
 	private final Double inflate;
 	private final Boolean dontRender;
@@ -41,9 +41,17 @@ public class GeoBone implements CoreGeoBone {
 	private float positionY;
 	private float positionZ;
 
+	private float positionX_TTP;
+	private float positionY_TTP;
+	private float positionZ_TTP;
+
 	private float pivotX;
 	private float pivotY;
 	private float pivotZ;
+
+	private float pivotX_TTP;
+	private float pivotY_TTP;
+	private float pivotZ_TTP;
 
 	private float rotX;
 	private float rotY;
@@ -56,7 +64,7 @@ public class GeoBone implements CoreGeoBone {
 	private final Matrix4f localSpaceMatrix = new Matrix4f();
 	private final Matrix4f worldSpaceMatrix = new Matrix4f();
 	private Matrix3f worldSpaceNormal = new Matrix3f();
-	
+
 	private boolean trackingMatrices;
 
 	public GeoBone(@Nullable GeoBone parent, String name, Boolean mirror, @Nullable Double inflate, @Nullable Boolean dontRender, @Nullable Boolean reset) {
@@ -106,13 +114,28 @@ public class GeoBone implements CoreGeoBone {
 	}
 
 	@Override
+	public float getPosX_TTP() {
+		return this.positionX_TTP;
+	}
+
+	@Override
 	public float getPosY() {
 		return this.positionY;
 	}
 
 	@Override
+	public float getPosY_TTP() {
+		return this.positionY_TTP;
+	}
+
+	@Override
 	public float getPosZ() {
 		return this.positionZ;
+	}
+
+	@Override
+	public float getPosZ_TTP() {
+		return this.positionZ_TTP;
 	}
 
 	@Override
@@ -154,6 +177,7 @@ public class GeoBone implements CoreGeoBone {
 	@Override
 	public void setPosX(float value) {
 		this.positionX = value;
+		this.positionX_TTP = value / 16f;
 
 		markPositionAsChanged();
 	}
@@ -161,6 +185,7 @@ public class GeoBone implements CoreGeoBone {
 	@Override
 	public void setPosY(float value) {
 		this.positionY = value;
+		this.positionY_TTP = value / 16f;
 
 		markPositionAsChanged();
 	}
@@ -168,6 +193,7 @@ public class GeoBone implements CoreGeoBone {
 	@Override
 	public void setPosZ(float value) {
 		this.positionZ = value;
+		this.positionZ_TTP = value / 16f;
 
 		markPositionAsChanged();
 	}
@@ -213,16 +239,19 @@ public class GeoBone implements CoreGeoBone {
 	@Override
 	public void setPivotX(float value) {
 		this.pivotX = value;
+		this.pivotX_TTP = value / 16f;
 	}
 
 	@Override
 	public void setPivotY(float value) {
 		this.pivotY = value;
+		this.pivotY_TTP = value / 16f;
 	}
 
 	@Override
 	public void setPivotZ(float value) {
 		this.pivotZ = value;
+		this.pivotZ_TTP = value / 16f;
 	}
 
 	@Override
@@ -231,13 +260,28 @@ public class GeoBone implements CoreGeoBone {
 	}
 
 	@Override
+	public float getPivotX_TTP() {
+		return this.pivotX_TTP;
+	}
+
+	@Override
 	public float getPivotY() {
 		return this.pivotY;
 	}
 
 	@Override
+	public float getPivotY_TTP() {
+		return this.pivotY_TTP;
+	}
+
+	@Override
 	public float getPivotZ() {
 		return this.pivotZ;
+	}
+
+	@Override
+	public float getPivotZ_TTP() {
+		return this.pivotZ_TTP;
 	}
 
 	@Override
@@ -396,7 +440,7 @@ public class GeoBone implements CoreGeoBone {
 		GeoBone parent = getParent();
 		Matrix4f matrix = (parent == null ? new Matrix4f().identity() : new Matrix4f(parent.getModelSpaceMatrix())).invert();
 		Vector4f vec = matrix.transform(new Vector4f(-(float)pos.x / 16f, (float)pos.y / 16f, (float)pos.z / 16f, 1));
-		
+
 		updatePosition(-vec.x() * 16f, vec.y() * 16f, vec.z() * 16f);
 	}
 
