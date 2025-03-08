@@ -19,8 +19,8 @@ public final class MolangQueries {
 	public static final String IS_ON_FIRE = "query.is_on_fire";
 	public static final String GROUND_SPEED = "query.ground_speed";
 	public static final String YAW_SPEED = "query.yaw_speed";
-	public static final String HAS_ARMOR_SLOT_0 = "query.has_armor_slot(0)";
-	public static final String HAS_ARMOR_SLOT_1 = "query.has_armor_slot(1)";
-	public static final String HAS_ARMOR_SLOT_2 = "query.has_armor_slot(2)";
-	public static final String HAS_ARMOR_SLOT_3 = "query.has_armor_slot(3)";
+	public static final String HAS_ARMOR_SLOT_0 = "query.has_armor_slot_0";
+	public static final String HAS_ARMOR_SLOT_1 = "query.has_armor_slot_1";
+	public static final String HAS_ARMOR_SLOT_2 = "query.has_armor_slot_2";
+	public static final String HAS_ARMOR_SLOT_3 = "query.has_armor_slot_3";
 }

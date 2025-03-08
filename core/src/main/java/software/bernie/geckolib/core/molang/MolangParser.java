@@ -86,6 +86,10 @@ public class MolangParser extends MathBuilder {
 		register(new LazyVariable(MolangQueries.TIME_OF_DAY, 0));
 		register(new LazyVariable(MolangQueries.IS_ON_FIRE, 0));
 		register(new LazyVariable(MolangQueries.GROUND_SPEED, 0));
+		register(new LazyVariable(MolangQueries.HAS_ARMOR_SLOT_0, 0));
+		register(new LazyVariable(MolangQueries.HAS_ARMOR_SLOT_1, 0));
+		register(new LazyVariable(MolangQueries.HAS_ARMOR_SLOT_2, 0));
+		register(new LazyVariable(MolangQueries.HAS_ARMOR_SLOT_3, 0));
 	}
 
 	/**
@@ -213,6 +217,10 @@ public class MolangParser extends MathBuilder {
 	 * Parse a single Molang statement
 	 */
 	protected static MolangValue parseOneLine(String expression, MolangCompoundValue currentStatement) throws MolangException {
+		if (expression.contains("slot(")) {
+			expression = expression.replace("slot(0)", "slot_0").replace("slot(1)", "slot_1").replace("slot(2)", "slot_2").replace("slot(3)", "slot_3");
+		}
+
 		if (expression.startsWith(RETURN)) {
 			try {
 				return new MolangValue(INSTANCE.parse(expression.substring(RETURN.length())), true);
