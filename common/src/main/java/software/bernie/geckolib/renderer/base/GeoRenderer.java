@@ -16,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.animatable.processing.AnimationState;
 import software.bernie.geckolib.animatable.processing.AnimationTest;
@@ -390,11 +389,13 @@ public interface GeoRenderer<T extends GeoAnimatable, O, R extends GeoRenderStat
 	 */
 	default void createVerticesOfQuad(R renderState, GeoQuad quad, Matrix4f poseState, Vector3f normal, VertexConsumer buffer,
 									  int packedOverlay, int packedLight, int renderColor) {
+		Vector3f transformedPosition = new Vector3f();
+
 		for (GeoVertex vertex : quad.vertices()) {
 			Vector3f position = vertex.position();			
-			Vector4f vector4f = poseState.transform(new Vector4f(position.x(), position.y(), position.z(), 1.0f));
+			poseState.transformPosition(position.x(), position.y(), position.z(), transformedPosition);
 
-			buffer.addVertex(vector4f.x(), vector4f.y(), vector4f.z(), renderColor, vertex.texU(),
+			buffer.addVertex(transformedPosition.x(), transformedPosition.y(), transformedPosition.z(), renderColor, vertex.texU(),
 					vertex.texV(), packedOverlay, packedLight, normal.x(), normal.y(), normal.z());
 		}
 	}
