@@ -41,9 +41,17 @@ public class GeoBone {
 	private float positionY;
 	private float positionZ;
 
+	private float positionX_TPP;
+	private float positionY_TPP;
+	private float positionZ_TPP;
+
 	private float pivotX;
 	private float pivotY;
 	private float pivotZ;
+
+	private float pivotX_TPP;
+	private float pivotY_TPP;
+	private float pivotZ_TPP;
 
 	private float rotX;
 	private float rotY;
@@ -107,6 +115,18 @@ public class GeoBone {
 		return this.positionZ;
 	}
 
+	public float getPosX_TPP() {
+		return this.positionX_TPP;
+	}
+
+	public float getPosY_TPP() {
+		return this.positionY_TPP;
+	}
+
+	public float getPosZ_TPP() {
+		return this.positionZ_TPP;
+	}
+
 	public float getScaleX() {
 		return this.scaleX;
 	}
@@ -145,18 +165,21 @@ public class GeoBone {
 
 	public void setPosX(float value) {
 		this.positionX = value;
+		this.positionX_TPP = value / 16f;
 
 		markPositionAsChanged();
 	}
 
 	public void setPosY(float value) {
 		this.positionY = value;
+		this.positionY_TPP = value / 16f;
 
 		markPositionAsChanged();
 	}
 
 	public void setPosZ(float value) {
 		this.positionZ = value;
+		this.positionZ_TPP = value / 16f;
 
 		markPositionAsChanged();
 	}
@@ -207,14 +230,17 @@ public class GeoBone {
 
 	public void setPivotX(float value) {
 		this.pivotX = value;
+		this.pivotX_TPP = value / 16f;
 	}
 
 	public void setPivotY(float value) {
 		this.pivotY = value;
+		this.pivotY_TPP = value / 16f;
 	}
 
 	public void setPivotZ(float value) {
 		this.pivotZ = value;
+		this.pivotZ_TPP = value / 16f;
 	}
 
 	public void updatePivot(float pivotX, float pivotY, float pivotZ) {
@@ -234,6 +260,19 @@ public class GeoBone {
 	public float getPivotZ() {
 		return this.pivotZ;
 	}
+
+	public float getPivotX_TPP() {
+		return this.pivotX_TPP;
+	}
+
+	public float getPivotY_TPP() {
+		return this.pivotY_TPP;
+	}
+
+	public float getPivotZ_TPP() {
+		return this.pivotZ_TPP;
+	}
+
 
 	public boolean isHidingChildren() {
 		return this.childrenHidden;

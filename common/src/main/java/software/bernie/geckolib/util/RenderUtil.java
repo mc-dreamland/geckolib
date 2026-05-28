@@ -36,7 +36,7 @@ import software.bernie.geckolib.renderer.base.GeoRenderer;
  */
 public final class RenderUtil {
 	public static void translateMatrixToBone(PoseStack poseStack, GeoBone bone) {
-		poseStack.translate(-bone.getPosX() / 16f, bone.getPosY() / 16f, bone.getPosZ() / 16f);
+		poseStack.translate(-bone.getPosX_TPP(), bone.getPosY_TPP(), bone.getPosZ_TPP());
 	}
 
 	public static void rotateMatrixAroundBone(PoseStack poseStack, GeoBone bone) {
@@ -52,10 +52,18 @@ public final class RenderUtil {
 
 	public static void rotateMatrixAroundCube(PoseStack poseStack, GeoCube cube) {
 		Vec3 rotation = cube.rotation();
+		float rotationX = (float)rotation.x();
+		float rotationY = (float)rotation.y();
+		float rotationZ = (float)rotation.z();
 
-		poseStack.mulPose(new Quaternionf().rotationXYZ(0, 0, (float)rotation.z()));
-		poseStack.mulPose(new Quaternionf().rotationXYZ(0, (float)rotation.y(), 0));
-		poseStack.mulPose(new Quaternionf().rotationXYZ((float)rotation.x(), 0, 0));
+		if (rotationZ != 0)
+			poseStack.mulPose(new Quaternionf().rotationXYZ(0, 0, rotationZ));
+
+		if (rotationY != 0)
+			poseStack.mulPose(new Quaternionf().rotationXYZ(0, rotationY, 0));
+
+		if (rotationX != 0)
+			poseStack.mulPose(new Quaternionf().rotationXYZ(rotationX, 0, 0));
 	}
 
 	public static void scaleMatrixForBone(PoseStack poseStack, GeoBone bone) {
@@ -64,21 +72,21 @@ public final class RenderUtil {
 
 	public static void translateToPivotPoint(PoseStack poseStack, GeoCube cube) {
 		Vec3 pivot = cube.pivot();
-		poseStack.translate(pivot.x() / 16f, pivot.y() / 16f, pivot.z() / 16f);
+		poseStack.translate(pivot.x(), pivot.y(), pivot.z());
 	}
 
 	public static void translateToPivotPoint(PoseStack poseStack, GeoBone bone) {
-		poseStack.translate(bone.getPivotX() / 16f, bone.getPivotY() / 16f, bone.getPivotZ() / 16f);
+		poseStack.translate(bone.getPivotX_TPP(), bone.getPivotY_TPP(), bone.getPivotZ_TPP());
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoCube cube) {
 		Vec3 pivot = cube.pivot();
 
-		poseStack.translate(-pivot.x() / 16f, -pivot.y() / 16f, -pivot.z() / 16f);
+		poseStack.translate(-pivot.x(), -pivot.y(), -pivot.z());
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoBone bone) {
-		poseStack.translate(-bone.getPivotX() / 16f, -bone.getPivotY() / 16f, -bone.getPivotZ() / 16f);
+		poseStack.translate(-bone.getPivotX_TPP(), -bone.getPivotY_TPP(), -bone.getPivotZ_TPP());
 	}
 
 	public static void translateAndRotateMatrixForBone(PoseStack poseStack, GeoBone bone) {
@@ -165,6 +173,13 @@ public final class RenderUtil {
 	 */
 	public static Vec3 arrayToVec(double[] array) {
 		return new Vec3(array[0], array[1], array[2]);
+	}
+
+	/**
+	 * Converts a given double array to its {@link Vec3} equivalent
+	 */
+	public static Vec3 arrayToVecTTP(double[] array) {
+		return new Vec3(array[0] / 16.0F, array[1] / 16.0F, array[2] / 16.0F);
 	}
 
 	/**

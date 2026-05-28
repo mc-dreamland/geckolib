@@ -168,7 +168,7 @@ public interface BakedModelFactory {
 			Vec3 size = RenderUtil.arrayToVec(cube.size());
 			Vec3 origin = RenderUtil.arrayToVec(cube.origin());
 			Vec3 rotation = RenderUtil.arrayToVec(cube.rotation());
-			Vec3 pivot = RenderUtil.arrayToVec(cube.pivot());
+			Vec3 pivot = RenderUtil.arrayToVecTTP(cube.pivot());
 			origin = new Vec3(-(origin.x + size.x) / 16d, origin.y / 16d, origin.z / 16d);
 			Vec3 vertexSize = size.multiply(1 / 16d, 1 / 16d, 1 / 16d);
 
