@@ -66,6 +66,18 @@ public final class RenderUtil {
 			poseStack.mulPose(new Quaternionf().rotationXYZ(rotationX, 0, 0));
 	}
 
+	public static boolean hasCubeRotation(GeoCube cube) {
+		Vec3 rotation = cube.rotation();
+
+		return rotation.x() != 0 || rotation.y() != 0 || rotation.z() != 0;
+	}
+
+	public static boolean isFlatCube(GeoCube cube) {
+		Vec3 size = cube.size();
+
+		return size.x() == 0 || size.y() == 0 || size.z() == 0;
+	}
+
 	public static void scaleMatrixForBone(PoseStack poseStack, GeoBone bone) {
 		poseStack.scale(bone.getScaleX(), bone.getScaleY(), bone.getScaleZ());
 	}

@@ -101,9 +101,14 @@ public class CustomBoneTextureGeoLayer<T extends GeoAnimatable, O, R extends Geo
     @ApiStatus.Internal
     protected void renderCube(R renderState, GeoCube cube, PoseStack poseStack, VertexConsumer buffer, float widthRatio, float heightRatio,
                               int packedLight, int packedOverlay, int renderColor) {
-        RenderUtil.translateToPivotPoint(poseStack, cube);
-        RenderUtil.rotateMatrixAroundCube(poseStack, cube);
-        RenderUtil.translateAwayFromPivotPoint(poseStack, cube);
+        boolean hasRotation = RenderUtil.hasCubeRotation(cube);
+        boolean isFlatCube = RenderUtil.isFlatCube(cube);
+
+        if (hasRotation) {
+            RenderUtil.translateToPivotPoint(poseStack, cube);
+            RenderUtil.rotateMatrixAroundCube(poseStack, cube);
+            RenderUtil.translateAwayFromPivotPoint(poseStack, cube);
+        }
 
         Matrix3f normalisedPoseState = poseStack.last().normal();
         Matrix4f poseState = new Matrix4f(poseStack.last().pose());
@@ -114,7 +119,9 @@ public class CustomBoneTextureGeoLayer<T extends GeoAnimatable, O, R extends Geo
 
             Vector3f normal = normalisedPoseState.transform(new Vector3f(quad.normal()));
 
-            RenderUtil.fixInvertedFlatCube(cube, normal);
+            if (isFlatCube)
+                RenderUtil.fixInvertedFlatCube(cube, normal);
+
             createVerticesOfQuad(renderState, quad, poseState, normal, buffer, widthRatio, heightRatio, packedOverlay, packedLight, renderColor);
         }
     }

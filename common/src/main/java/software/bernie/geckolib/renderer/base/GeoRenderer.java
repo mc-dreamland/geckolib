@@ -360,9 +360,14 @@ public interface GeoRenderer<T extends GeoAnimatable, O, R extends GeoRenderStat
 	 * This tends to be called recursively from something like {@link GeoRenderer#renderCubesOfBone}
 	 */
 	default void renderCube(R renderState, GeoCube cube, PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int renderColor) {
-		RenderUtil.translateToPivotPoint(poseStack, cube);
-		RenderUtil.rotateMatrixAroundCube(poseStack, cube);
-		RenderUtil.translateAwayFromPivotPoint(poseStack, cube);
+		boolean hasRotation = RenderUtil.hasCubeRotation(cube);
+		boolean isFlatCube = RenderUtil.isFlatCube(cube);
+
+		if (hasRotation) {
+			RenderUtil.translateToPivotPoint(poseStack, cube);
+			RenderUtil.rotateMatrixAroundCube(poseStack, cube);
+			RenderUtil.translateAwayFromPivotPoint(poseStack, cube);
+		}
 
 		Matrix3f normalisedPoseState = poseStack.last().normal();
 		Matrix4f poseState = new Matrix4f(poseStack.last().pose());
@@ -373,7 +378,9 @@ public interface GeoRenderer<T extends GeoAnimatable, O, R extends GeoRenderStat
 
 			Vector3f normal = normalisedPoseState.transform(new Vector3f(quad.normal()));
 			
-			RenderUtil.fixInvertedFlatCube(cube, normal);
+			if (isFlatCube)
+				RenderUtil.fixInvertedFlatCube(cube, normal);
+
 			createVerticesOfQuad(renderState, quad, poseState, normal, buffer, packedOverlay, packedLight, renderColor);
 		}
 	}
