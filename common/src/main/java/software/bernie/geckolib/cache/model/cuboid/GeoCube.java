@@ -25,9 +25,11 @@ public record GeoCube(@Nullable GeoQuad[] quads, Vec3 pivot, Vec3 rotation, Vec3
      * Submit this cuboid's quads to the vertex consumer
      */
     public void render(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int renderColor) {
-        translateToPivotPoint(poseStack);
-        rotate(poseStack);
-        translateAwayFromPivotPoint(poseStack);
+        if (hasRotation()) {
+            translateToPivotPoint(poseStack);
+            rotate(poseStack);
+            translateAwayFromPivotPoint(poseStack);
+        }
 
         Matrix3f normalisedPoseState = poseStack.last().normal();
         Matrix4f poseState = new Matrix4f(poseStack.last().pose());
@@ -38,10 +40,20 @@ public record GeoCube(@Nullable GeoQuad[] quads, Vec3 pivot, Vec3 rotation, Vec3
 
             Vector3f normal = normalisedPoseState.transform(quad.normalVec());
 
-            RenderUtil.fixInvertedFlatCube(this, normal);
+            if (isFlat())
+                RenderUtil.fixInvertedFlatCube(this, normal);
+
             quad.render(poseState, normal, vertexConsumer, packedLight, packedOverlay, renderColor);
         }
 
+    }
+
+    public boolean hasRotation() {
+        return rotation().x() != 0 || rotation().y() != 0 || rotation().z() != 0;
+    }
+
+    public boolean isFlat() {
+        return size().x() == 0 || size().y() == 0 || size().z() == 0;
     }
 
     /**
