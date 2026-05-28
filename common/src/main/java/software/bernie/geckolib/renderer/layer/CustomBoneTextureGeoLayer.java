@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.IntIntPair;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
@@ -109,19 +110,44 @@ public class CustomBoneTextureGeoLayer<T extends GeoAnimatable, O, R extends Geo
             RenderUtil.translateAwayFromPivotPoint(poseStack, cube);
         }
 
-        Matrix3f normalisedPoseState = poseStack.last().normal();
-        Matrix4f poseState = new Matrix4f(poseStack.last().pose());
+        PoseStack.Pose currentPose = poseStack.last();
+        Matrix3f normalisedPoseState = currentPose.normal();
+        Matrix4f poseState = currentPose.pose();
+        float normalM00 = normalisedPoseState.m00();
+        float normalM01 = normalisedPoseState.m01();
+        float normalM02 = normalisedPoseState.m02();
+        float normalM10 = normalisedPoseState.m10();
+        float normalM11 = normalisedPoseState.m11();
+        float normalM12 = normalisedPoseState.m12();
+        float normalM20 = normalisedPoseState.m20();
+        float normalM21 = normalisedPoseState.m21();
+        float normalM22 = normalisedPoseState.m22();
+        Vec3 cubeSize = cube.size();
 
         for (GeoQuad quad : cube.quads()) {
             if (quad == null)
                 continue;
 
-            Vector3f normal = normalisedPoseState.transform(new Vector3f(quad.normal()));
+            Vector3f normal = quad.normal();
+            float baseNormalX = normal.x();
+            float baseNormalY = normal.y();
+            float baseNormalZ = normal.z();
+            float normalX = org.joml.Math.fma(normalM00, baseNormalX, org.joml.Math.fma(normalM10, baseNormalY, normalM20 * baseNormalZ));
+            float normalY = org.joml.Math.fma(normalM01, baseNormalX, org.joml.Math.fma(normalM11, baseNormalY, normalM21 * baseNormalZ));
+            float normalZ = org.joml.Math.fma(normalM02, baseNormalX, org.joml.Math.fma(normalM12, baseNormalY, normalM22 * baseNormalZ));
 
-            if (isFlatCube)
-                RenderUtil.fixInvertedFlatCube(cube, normal);
+            if (isFlatCube) {
+                if (normalX < 0 && (cubeSize.y() == 0 || cubeSize.z() == 0))
+                    normalX = -normalX;
 
-            createVerticesOfQuad(renderState, quad, poseState, normal, buffer, widthRatio, heightRatio, packedOverlay, packedLight, renderColor);
+                if (normalY < 0 && (cubeSize.x() == 0 || cubeSize.z() == 0))
+                    normalY = -normalY;
+
+                if (normalZ < 0 && (cubeSize.x() == 0 || cubeSize.y() == 0))
+                    normalZ = -normalZ;
+            }
+
+            createVerticesOfQuad(renderState, quad, poseState, normalX, normalY, normalZ, buffer, widthRatio, heightRatio, packedOverlay, packedLight, renderColor);
         }
     }
 
@@ -129,16 +155,32 @@ public class CustomBoneTextureGeoLayer<T extends GeoAnimatable, O, R extends Geo
      * Applies the {@link GeoQuad Quad's} {@link GeoVertex vertices} to the given {@link VertexConsumer buffer} for rendering
      */
     @ApiStatus.Internal
-    protected void createVerticesOfQuad(R renderState, GeoQuad quad, Matrix4f poseState, Vector3f normal, VertexConsumer buffer,
+    protected void createVerticesOfQuad(R renderState, GeoQuad quad, Matrix4f poseState, float normalX, float normalY, float normalZ, VertexConsumer buffer,
                                         float widthRatio, float heightRatio, int packedOverlay, int packedLight, int renderColor) {
-        Vector3f transformedPosition = new Vector3f();
+        float poseM00 = poseState.m00();
+        float poseM01 = poseState.m01();
+        float poseM02 = poseState.m02();
+        float poseM10 = poseState.m10();
+        float poseM11 = poseState.m11();
+        float poseM12 = poseState.m12();
+        float poseM20 = poseState.m20();
+        float poseM21 = poseState.m21();
+        float poseM22 = poseState.m22();
+        float poseM30 = poseState.m30();
+        float poseM31 = poseState.m31();
+        float poseM32 = poseState.m32();
 
         for (GeoVertex vertex : quad.vertices()) {
             Vector3f position = vertex.position();
-            poseState.transformPosition(position.x(), position.y(), position.z(), transformedPosition);
+            float positionX = position.x();
+            float positionY = position.y();
+            float positionZ = position.z();
+            float transformedX = org.joml.Math.fma(poseM00, positionX, org.joml.Math.fma(poseM10, positionY, org.joml.Math.fma(poseM20, positionZ, poseM30)));
+            float transformedY = org.joml.Math.fma(poseM01, positionX, org.joml.Math.fma(poseM11, positionY, org.joml.Math.fma(poseM21, positionZ, poseM31)));
+            float transformedZ = org.joml.Math.fma(poseM02, positionX, org.joml.Math.fma(poseM12, positionY, org.joml.Math.fma(poseM22, positionZ, poseM32)));
 
-            buffer.addVertex(transformedPosition.x(), transformedPosition.y(), transformedPosition.z(), renderColor, vertex.texU() * widthRatio, vertex.texV() * heightRatio,
-                             packedOverlay, packedLight, normal.x(), normal.y(), normal.z());
+            buffer.addVertex(transformedX, transformedY, transformedZ, renderColor, vertex.texU() * widthRatio, vertex.texV() * heightRatio,
+                             packedOverlay, packedLight, normalX, normalY, normalZ);
         }
     }
 

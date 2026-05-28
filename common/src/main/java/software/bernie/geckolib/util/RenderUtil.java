@@ -36,10 +36,16 @@ import software.bernie.geckolib.renderer.base.GeoRenderer;
  */
 public final class RenderUtil {
 	public static void translateMatrixToBone(PoseStack poseStack, GeoBone bone) {
+		if (!hasBonePosition(bone))
+			return;
+
 		poseStack.translate(-bone.getPosX_TPP(), bone.getPosY_TPP(), bone.getPosZ_TPP());
 	}
 
 	public static void rotateMatrixAroundBone(PoseStack poseStack, GeoBone bone) {
+		if (!hasBoneRotation(bone))
+			return;
+
 		if (bone.getRotZ() != 0)
 			poseStack.mulPose(Axis.ZP.rotation(bone.getRotZ()));
 
@@ -79,6 +85,9 @@ public final class RenderUtil {
 	}
 
 	public static void scaleMatrixForBone(PoseStack poseStack, GeoBone bone) {
+		if (!hasBoneScale(bone))
+			return;
+
 		poseStack.scale(bone.getScaleX(), bone.getScaleY(), bone.getScaleZ());
 	}
 
@@ -88,6 +97,9 @@ public final class RenderUtil {
 	}
 
 	public static void translateToPivotPoint(PoseStack poseStack, GeoBone bone) {
+		if (!hasBonePivot(bone))
+			return;
+
 		poseStack.translate(bone.getPivotX_TPP(), bone.getPivotY_TPP(), bone.getPivotZ_TPP());
 	}
 
@@ -98,6 +110,9 @@ public final class RenderUtil {
 	}
 
 	public static void translateAwayFromPivotPoint(PoseStack poseStack, GeoBone bone) {
+		if (!hasBonePivot(bone))
+			return;
+
 		poseStack.translate(-bone.getPivotX_TPP(), -bone.getPivotY_TPP(), -bone.getPivotZ_TPP());
 	}
 
@@ -108,10 +123,29 @@ public final class RenderUtil {
 
 	public static void prepMatrixForBone(PoseStack poseStack, GeoBone bone) {
 		translateMatrixToBone(poseStack, bone);
-		translateToPivotPoint(poseStack, bone);
-		rotateMatrixAroundBone(poseStack, bone);
-		scaleMatrixForBone(poseStack, bone);
-		translateAwayFromPivotPoint(poseStack, bone);
+
+		if (hasBoneRotation(bone) || hasBoneScale(bone)) {
+			translateToPivotPoint(poseStack, bone);
+			rotateMatrixAroundBone(poseStack, bone);
+			scaleMatrixForBone(poseStack, bone);
+			translateAwayFromPivotPoint(poseStack, bone);
+		}
+	}
+
+	public static boolean hasBonePosition(GeoBone bone) {
+		return bone.getPosX_TPP() != 0 || bone.getPosY_TPP() != 0 || bone.getPosZ_TPP() != 0;
+	}
+
+	public static boolean hasBoneRotation(GeoBone bone) {
+		return bone.getRotX() != 0 || bone.getRotY() != 0 || bone.getRotZ() != 0;
+	}
+
+	public static boolean hasBoneScale(GeoBone bone) {
+		return bone.getScaleX() != 1 || bone.getScaleY() != 1 || bone.getScaleZ() != 1;
+	}
+
+	public static boolean hasBonePivot(GeoBone bone) {
+		return bone.getPivotX_TPP() != 0 || bone.getPivotY_TPP() != 0 || bone.getPivotZ_TPP() != 0;
 	}
 	
 	public static Matrix4f invertAndMultiplyMatrices(Matrix4f baseMatrix, Matrix4f inputMatrix) {
