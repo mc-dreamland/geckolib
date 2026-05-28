@@ -10,6 +10,7 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.navigation.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -328,14 +329,24 @@ public final class MolangQueries {
 		MolangQueries.<Entity>setActorVariable(RIDER_HEAD_Y_ROTATION, actor -> actor.animatable.getFirstPassenger() instanceof LivingEntity living ? living.getViewYRot(actor.partialTick) : 0);
 		MolangQueries.<Entity>setActorVariable(VERTICAL_SPEED, actor -> actor.animatable.getDeltaMovement().y);
 		MolangQueries.<Entity>setActorVariable(YAW_SPEED, actor -> actor.animatable.getYRot() - actor.animatable.yRotO);
-		MolangQueries.<Entity>setActorVariable(HAS_ARMOR_SLOT_0, actor -> hasArmorSlot(actor.animatable, EquipmentSlot.HEAD));
-		MolangQueries.<Entity>setActorVariable(HAS_ARMOR_SLOT_1, actor -> hasArmorSlot(actor.animatable, EquipmentSlot.CHEST));
-		MolangQueries.<Entity>setActorVariable(HAS_ARMOR_SLOT_2, actor -> hasArmorSlot(actor.animatable, EquipmentSlot.LEGS));
-		MolangQueries.<Entity>setActorVariable(HAS_ARMOR_SLOT_3, actor -> hasArmorSlot(actor.animatable, EquipmentSlot.FEET));
+		setActorVariable(HAS_ARMOR_SLOT_0, actor -> hasArmorSlot(actor, EquipmentSlot.HEAD));
+		setActorVariable(HAS_ARMOR_SLOT_1, actor -> hasArmorSlot(actor, EquipmentSlot.CHEST));
+		setActorVariable(HAS_ARMOR_SLOT_2, actor -> hasArmorSlot(actor, EquipmentSlot.LEGS));
+		setActorVariable(HAS_ARMOR_SLOT_3, actor -> hasArmorSlot(actor, EquipmentSlot.FEET));
 	}
 
-	private static double hasArmorSlot(Entity entity, EquipmentSlot slot) {
-		return RenderUtil.booleanToFloat(entity instanceof EquipmentUser equipmentUser && !equipmentUser.getItemBySlot(slot).isEmpty());
+	private static double hasArmorSlot(Actor<?> actor, EquipmentSlot slot) {
+		if (actor.animatable instanceof EquipmentUser equipmentUser)
+			return RenderUtil.booleanToFloat(!equipmentUser.getItemBySlot(slot).isEmpty());
+
+		if (actor.renderState.hasGeckolibData(DataTickets.EQUIPMENT_BY_SLOT)) {
+			Map<?, ?> equipment = actor.renderState.getGeckolibData(DataTickets.EQUIPMENT_BY_SLOT);
+
+			if (equipment != null && equipment.get(slot) instanceof ItemStack stack)
+				return RenderUtil.booleanToFloat(!stack.isEmpty());
+		}
+
+		return RenderUtil.booleanToFloat(actor.clientPlayer != null && !actor.clientPlayer.getItemBySlot(slot).isEmpty());
 	}
 
 	private static void setDefaultLivingEntityQueryValues() {
