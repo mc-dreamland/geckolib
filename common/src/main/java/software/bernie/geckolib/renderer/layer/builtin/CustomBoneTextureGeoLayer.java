@@ -9,8 +9,6 @@ import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 import software.bernie.geckolib.GeckoLibConstants;
 import software.bernie.geckolib.animatable.GeoAnimatable;
@@ -126,6 +124,12 @@ public class CustomBoneTextureGeoLayer<T extends GeoAnimatable, O, R extends Geo
                 bone.translateAwayFromPivotPoint(poseStack);
 
                 for (GeoCube cube : ((CuboidGeoBone)bone).cubes) {
+                    if (!cube.hasRotation()) {
+                        renderCube(cube, poseStack, buffer, packedLight, packedOverlay, renderColor, widthRatio, heightRatio);
+
+                        continue;
+                    }
+
                     poseStack.pushPose();
                     renderCube(cube, poseStack, buffer, packedLight, packedOverlay, renderColor, widthRatio, heightRatio);
                     poseStack.popPose();
@@ -142,35 +146,81 @@ public class CustomBoneTextureGeoLayer<T extends GeoAnimatable, O, R extends Geo
      */
     @ApiStatus.Internal
     public void renderCube(GeoCube cube, PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int renderColor, float widthRatio, float heightRatio) {
-        cube.translateToPivotPoint(poseStack);
-        cube.rotate(poseStack);
-        cube.translateAwayFromPivotPoint(poseStack);
+        if (cube.hasRotation()) {
+            cube.translateToPivotPoint(poseStack);
+            cube.rotate(poseStack);
+            cube.translateAwayFromPivotPoint(poseStack);
+        }
 
-        Matrix3f normalisedPoseState = poseStack.last().normal();
-        Matrix4f poseState = new Matrix4f(poseStack.last().pose());
+        PoseStack.Pose currentPose = poseStack.last();
+        Matrix3f normalisedPoseState = currentPose.normal();
+        Matrix4f poseState = currentPose.pose();
+        float normalM00 = normalisedPoseState.m00();
+        float normalM01 = normalisedPoseState.m01();
+        float normalM02 = normalisedPoseState.m02();
+        float normalM10 = normalisedPoseState.m10();
+        float normalM11 = normalisedPoseState.m11();
+        float normalM12 = normalisedPoseState.m12();
+        float normalM20 = normalisedPoseState.m20();
+        float normalM21 = normalisedPoseState.m21();
+        float normalM22 = normalisedPoseState.m22();
+        boolean flat = cube.isFlat();
 
         for (GeoQuad quad : cube.quads()) {
             if (quad == null)
                 continue;
 
-            Vector3f normal = normalisedPoseState.transform(quad.normalVec());
+            float baseNormalX = quad.normalX();
+            float baseNormalY = quad.normalY();
+            float baseNormalZ = quad.normalZ();
+            float normalX = org.joml.Math.fma(normalM00, baseNormalX, org.joml.Math.fma(normalM10, baseNormalY, normalM20 * baseNormalZ));
+            float normalY = org.joml.Math.fma(normalM01, baseNormalX, org.joml.Math.fma(normalM11, baseNormalY, normalM21 * baseNormalZ));
+            float normalZ = org.joml.Math.fma(normalM02, baseNormalX, org.joml.Math.fma(normalM12, baseNormalY, normalM22 * baseNormalZ));
 
-            RenderUtil.fixInvertedFlatCube(cube, normal);
-            renderQuad(quad, poseState, normal, vertexConsumer, packedLight, packedOverlay, renderColor, widthRatio, heightRatio);
+            if (flat) {
+                if (normalX < 0 && (cube.size().y() == 0 || cube.size().z() == 0))
+                    normalX = -normalX;
+
+                if (normalY < 0 && (cube.size().x() == 0 || cube.size().z() == 0))
+                    normalY = -normalY;
+
+                if (normalZ < 0 && (cube.size().x() == 0 || cube.size().y() == 0))
+                    normalZ = -normalZ;
+            }
+
+            renderQuad(quad, poseState, normalX, normalY, normalZ, vertexConsumer, packedLight, packedOverlay, renderColor, widthRatio, heightRatio);
         }
     }
 
     /**
      * Submit a modified texture quad to the vertex consumer
-     * @see GeoQuad#render(Matrix4f, Vector3f, VertexConsumer, int, int, int)
+     * @see GeoQuad
      */
     @ApiStatus.Internal
-    protected void renderQuad(GeoQuad quad, Matrix4f pose, Vector3f normal, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int renderColor, float widthRatio, float heightRatio) {
-        for (GeoVertex vertex : quad.vertices()) {
-            Vector4f vector4f = pose.transform(new Vector4f(vertex.posX(), vertex.posY(), vertex.posZ(), 1));
+    protected void renderQuad(GeoQuad quad, Matrix4f pose, float normalX, float normalY, float normalZ, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int renderColor, float widthRatio, float heightRatio) {
+        float poseM00 = pose.m00();
+        float poseM01 = pose.m01();
+        float poseM02 = pose.m02();
+        float poseM10 = pose.m10();
+        float poseM11 = pose.m11();
+        float poseM12 = pose.m12();
+        float poseM20 = pose.m20();
+        float poseM21 = pose.m21();
+        float poseM22 = pose.m22();
+        float poseM30 = pose.m30();
+        float poseM31 = pose.m31();
+        float poseM32 = pose.m32();
 
-            vertexConsumer.addVertex(vector4f.x(), vector4f.y(), vector4f.z(), renderColor, vertex.texU() * widthRatio,
-                                     vertex.texV() * heightRatio, packedOverlay, packedLight, normal.x(), normal.y(), normal.z());
+        for (GeoVertex vertex : quad.vertices()) {
+            float positionX = vertex.posX();
+            float positionY = vertex.posY();
+            float positionZ = vertex.posZ();
+            float transformedX = org.joml.Math.fma(poseM00, positionX, org.joml.Math.fma(poseM10, positionY, org.joml.Math.fma(poseM20, positionZ, poseM30)));
+            float transformedY = org.joml.Math.fma(poseM01, positionX, org.joml.Math.fma(poseM11, positionY, org.joml.Math.fma(poseM21, positionZ, poseM31)));
+            float transformedZ = org.joml.Math.fma(poseM02, positionX, org.joml.Math.fma(poseM12, positionY, org.joml.Math.fma(poseM22, positionZ, poseM32)));
+
+            vertexConsumer.addVertex(transformedX, transformedY, transformedZ, renderColor, vertex.texU() * widthRatio,
+                                     vertex.texV() * heightRatio, packedOverlay, packedLight, normalX, normalY, normalZ);
         }
     }
 }

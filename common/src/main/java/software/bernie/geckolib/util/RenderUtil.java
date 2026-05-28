@@ -24,6 +24,7 @@ import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.animatable.client.GeoRenderProvider;
+import software.bernie.geckolib.animation.state.BoneSnapshot;
 import software.bernie.geckolib.cache.model.GeoBone;
 import software.bernie.geckolib.cache.model.GeoQuad;
 import software.bernie.geckolib.cache.model.cuboid.GeoCube;
@@ -37,6 +38,13 @@ import java.util.List;
  * Helper class for various methods and functions useful while rendering
  */
 public final class RenderUtil {
+    public static boolean hasBoneRenderTransform(GeoBone bone) {
+        BoneSnapshot snapshot = bone.frameSnapshot;
+
+        return bone.baseRotX() != 0 || bone.baseRotY() != 0 || bone.baseRotZ() != 0 ||
+               snapshot != null && (snapshot.hasTranslation() || snapshot.hasRotation() || snapshot.hasScale());
+    }
+
     /**
      * Transform a PoseStack to match a bone's render position.
      * <p>

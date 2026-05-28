@@ -23,6 +23,12 @@ public final class CuboidGeoBone extends GeoBone {
     public <R extends GeoRenderState> void render(RenderPassInfo<R> renderPassInfo, PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int renderColor) {
         if (this.frameSnapshot == null || !this.frameSnapshot.isHidden()) {
             for (GeoCube cube : this.cubes) {
+                if (!cube.hasRotation()) {
+                    cube.render(poseStack, vertexConsumer, packedLight, packedOverlay, renderColor);
+
+                    continue;
+                }
+
                 poseStack.pushPose();
                 cube.render(poseStack, vertexConsumer, packedLight, packedOverlay, renderColor);
                 poseStack.popPose();

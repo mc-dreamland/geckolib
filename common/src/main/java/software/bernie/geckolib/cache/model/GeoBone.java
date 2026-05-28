@@ -129,6 +129,13 @@ public abstract class GeoBone {
     public void renderChildren(RenderPassInfo<?> renderPassInfo, PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int renderColor) {
         if (this.frameSnapshot == null || !this.frameSnapshot.areChildrenHidden()) {
             for (GeoBone child : this.children) {
+                if (!RenderUtil.hasBoneRenderTransform(child) && child.positionListeners == null) {
+                    child.render(renderPassInfo, poseStack, vertexConsumer, packedLight, packedOverlay, renderColor);
+                    child.renderChildren(renderPassInfo, poseStack, vertexConsumer, packedLight, packedOverlay, renderColor);
+
+                    continue;
+                }
+
                 poseStack.pushPose();
                 RenderUtil.prepMatrixForBoneAndUpdateListeners(poseStack, child, renderPassInfo);
 
@@ -146,6 +153,13 @@ public abstract class GeoBone {
      */
     public <R extends GeoRenderState> void positionAndRender(RenderPassInfo<R> renderPassInfo, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int renderColor) {
         final PoseStack poseStack = renderPassInfo.poseStack();
+
+        if (!RenderUtil.hasBoneRenderTransform(this) && this.positionListeners == null) {
+            render(renderPassInfo, poseStack, vertexConsumer, packedLight, packedOverlay, renderColor);
+            renderChildren(renderPassInfo, poseStack, vertexConsumer, packedLight, packedOverlay, renderColor);
+
+            return;
+        }
 
         poseStack.pushPose();
         RenderUtil.prepMatrixForBone(poseStack, this);
