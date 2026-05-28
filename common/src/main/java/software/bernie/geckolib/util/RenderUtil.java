@@ -144,6 +144,10 @@ public final class RenderUtil {
 		return bone.getScaleX() != 1 || bone.getScaleY() != 1 || bone.getScaleZ() != 1;
 	}
 
+	public static boolean hasBoneRenderTransform(GeoBone bone) {
+		return hasBonePosition(bone) || hasBoneRotation(bone) || hasBoneScale(bone);
+	}
+
 	public static boolean hasBonePivot(GeoBone bone) {
 		return bone.getPivotX_TPP() != 0 || bone.getPivotY_TPP() != 0 || bone.getPivotZ_TPP() != 0;
 	}

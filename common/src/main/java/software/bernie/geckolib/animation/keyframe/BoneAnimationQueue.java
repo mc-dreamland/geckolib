@@ -21,6 +21,18 @@ public record BoneAnimationQueue(GeoBone bone, LinkedList<AnimationPoint> rotati
              new LinkedList<>(), new LinkedList<>(), new LinkedList<>());
 	}
 
+	public void clear() {
+		this.rotationXQueue.clear();
+		this.rotationYQueue.clear();
+		this.rotationZQueue.clear();
+		this.positionXQueue.clear();
+		this.positionYQueue.clear();
+		this.positionZQueue.clear();
+		this.scaleXQueue.clear();
+		this.scaleYQueue.clear();
+		this.scaleZQueue.clear();
+	}
+
 	/**
 	 * Add a new {@link AnimationPoint} to the {@link BoneAnimationQueue#positionXQueue}
 	 *

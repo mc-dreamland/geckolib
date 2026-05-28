@@ -85,6 +85,12 @@ public class CustomBoneTextureGeoLayer<T extends GeoAnimatable, O, R extends Geo
         bone.setChildrenHidden(true);
 
         for (GeoCube cube : bone.getCubes()) {
+            if (!RenderUtil.hasCubeRotation(cube)) {
+                renderCube(renderState, cube, poseStack, buffer, widthRatio, heightRatio, packedLight, packedOverlay, renderColor);
+
+                continue;
+            }
+
             poseStack.pushPose();
             renderCube(renderState, cube, poseStack, buffer, widthRatio, heightRatio, packedLight, packedOverlay, renderColor);
             poseStack.popPose();

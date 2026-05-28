@@ -537,11 +537,12 @@ public class AnimationController<T extends GeoAnimatable> {
 		if (this.nextPlaystate == PlayState.STOP || (this.currentAnimation == null && this.animationQueue.isEmpty())) {
 			this.animationState = State.STOPPED;
 			this.justStopped = true;
+			this.boneAnimationQueues.clear();
 
 			return;
 		}
 
-		createInitialQueues(bones.values());
+		createInitialQueues(bones);
 
 		if (this.justStartedTransition && (this.shouldResetTick || this.justStopped)) {
 			this.justStopped = false;
@@ -562,7 +563,7 @@ public class AnimationController<T extends GeoAnimatable> {
 		}
 
 		if (getAnimationState() == State.RUNNING) {
-			processCurrentAnimation(state, this.processedAnimationTick, lerpedAnimationTick);
+			processCurrentAnimation(state, bones, this.processedAnimationTick, lerpedAnimationTick);
 		}
 		else if (this.animationState == State.TRANSITIONING) {
 			if (this.lastPollTime != lerpedAnimationTick && (this.processedAnimationTick == 0 || this.isJustStarting)) {
@@ -582,13 +583,13 @@ public class AnimationController<T extends GeoAnimatable> {
 				this.currentAnimationSeconds = 0;
 
 				for (BoneAnimation boneAnimation : this.currentAnimation.animation().boneAnimations()) {
-					BoneAnimationQueue boneAnimationQueue = this.boneAnimationQueues.get(boneAnimation.boneName());
+					BoneAnimationQueue boneAnimationQueue = getOrCreateBoneAnimationQueue(bones, boneAnimation.boneName());
 					BoneSnapshot boneSnapshot = this.boneSnapshots.get(boneAnimation.boneName());
-					GeoBone bone = bones.get(boneAnimation.boneName());
 
-					if (boneSnapshot == null || bone == null)
+					if (boneAnimationQueue == null || boneSnapshot == null)
 						continue;
 
+					GeoBone bone = boneAnimationQueue.bone();
 					KeyframeStack<Keyframe<MathValue>> rotationKeyFrames = boneAnimation.rotationKeyFrames();
 					KeyframeStack<Keyframe<MathValue>> positionKeyFrames = boneAnimation.positionKeyFrames();
 					KeyframeStack<Keyframe<MathValue>> scaleKeyFrames = boneAnimation.scaleKeyFrames();
@@ -634,7 +635,7 @@ public class AnimationController<T extends GeoAnimatable> {
 	 * @param adjustedTick The controller-adjusted tick for animation purposes
 	 * @param lerpedAnimationTick The lerped tick (current tick + partial tick)
 	 */
-	private void processCurrentAnimation(AnimationState<T> animationState, double adjustedTick, double lerpedAnimationTick) {
+	private void processCurrentAnimation(AnimationState<T> animationState, Map<String, GeoBone> bones, double adjustedTick, double lerpedAnimationTick) {
 		if (adjustedTick >= this.currentAnimation.animation().length()) {
 			if (this.currentAnimation.loopType().shouldPlayAgain(animationState, this, this.currentAnimation.animation())) {
 				if (this.animationState != State.PAUSED) {
@@ -666,7 +667,7 @@ public class AnimationController<T extends GeoAnimatable> {
 		this.currentAnimationSeconds = adjustedTick / 20d;
 
 		for (BoneAnimation boneAnimation : this.currentAnimation.animation().boneAnimations()) {
-			BoneAnimationQueue boneAnimationQueue = this.boneAnimationQueues.get(boneAnimation.boneName());
+			BoneAnimationQueue boneAnimationQueue = getOrCreateBoneAnimationQueue(bones, boneAnimation.boneName());
 
 			if (boneAnimationQueue == null)
 				continue;
@@ -742,14 +743,39 @@ public class AnimationController<T extends GeoAnimatable> {
 	/**
 	 * Prepare the {@link BoneAnimationQueue} map for the current render frame
 	 *
-	 * @param modelRendererList The bone list from the {@link AnimationProcessor}
+	 * @param modelRendererList The named bone map from the {@link AnimationProcessor}
 	 */
-	private void createInitialQueues(Collection<GeoBone> modelRendererList) {
-		this.boneAnimationQueues.clear();
+	private void createInitialQueues(Map<String, GeoBone> modelRendererList) {
+		Iterator<Map.Entry<String, BoneAnimationQueue>> iterator = this.boneAnimationQueues.entrySet().iterator();
 
-		for (GeoBone modelRenderer : modelRendererList) {
-			this.boneAnimationQueues.put(modelRenderer.getName(), new BoneAnimationQueue(modelRenderer));
+		while (iterator.hasNext()) {
+			Map.Entry<String, BoneAnimationQueue> entry = iterator.next();
+
+			if (entry.getValue().bone() != modelRendererList.get(entry.getKey())) {
+				iterator.remove();
+
+				continue;
+			}
+
+			entry.getValue().clear();
 		}
+	}
+
+	private BoneAnimationQueue getOrCreateBoneAnimationQueue(Map<String, GeoBone> bones, String boneName) {
+		BoneAnimationQueue boneAnimationQueue = this.boneAnimationQueues.get(boneName);
+
+		if (boneAnimationQueue != null)
+			return boneAnimationQueue;
+
+		GeoBone bone = bones.get(boneName);
+
+		if (bone == null)
+			return null;
+
+		boneAnimationQueue = new BoneAnimationQueue(bone);
+		this.boneAnimationQueues.put(boneName, boneAnimationQueue);
+
+		return boneAnimationQueue;
 	}
 
 	/**
@@ -794,11 +820,33 @@ public class AnimationController<T extends GeoAnimatable> {
 	}
 
 	/**
-	 * Convert a {@link KeyframeLocation} to an {@link AnimationPoint}
+	 * Convert the relevant {@link Keyframe} at the given tick to an {@link AnimationPoint}
 	 */
 	private AnimationPoint getAnimationPointAtTick(List<Keyframe<MathValue>> frames, AnimationState<?> animationState, double tick, boolean isRotation, Axis axis) {
-		KeyframeLocation<Keyframe<MathValue>> location = getCurrentKeyFrameLocation(frames, tick);
-		Keyframe<MathValue> currentFrame = location.keyframe();
+		Keyframe<MathValue> currentFrame;
+		double currentTick = tick;
+
+		if (frames.size() == 1) {
+			currentFrame = frames.getFirst();
+		}
+		else {
+			double totalFrameTime = 0;
+			currentFrame = frames.getLast();
+
+			for (Keyframe<MathValue> frame : frames) {
+				double frameLength = frame.length();
+
+				totalFrameTime += frameLength;
+
+				if (totalFrameTime > tick) {
+					currentFrame = frame;
+					currentTick = tick - (totalFrameTime - frameLength);
+
+					break;
+				}
+			}
+		}
+
 		double startValue = currentFrame.startValue().get(animationState);
 		double endValue = currentFrame.endValue().get(animationState);
 
@@ -818,28 +866,7 @@ public class AnimationController<T extends GeoAnimatable> {
 			}
 		}
 
-		return new AnimationPoint(currentFrame, location.startTick(), currentFrame.length(), startValue, endValue);
-	}
-
-	/**
-	 * Returns the {@link Keyframe} relevant to the current tick time
-	 *
-	 * @param frames The list of {@code KeyFrames} to filter through
-	 * @param ageInTicks The current tick time
-	 * @return A new {@code KeyFrameLocation} containing the current {@code KeyFrame} and the tick time used to find it
-	 */
-	private KeyframeLocation<Keyframe<MathValue>> getCurrentKeyFrameLocation(List<Keyframe<MathValue>> frames,
-																			 double ageInTicks) {
-		double totalFrameTime = 0;
-
-		for (Keyframe<MathValue> frame : frames) {
-			totalFrameTime += frame.length();
-
-			if (totalFrameTime > ageInTicks)
-				return new KeyframeLocation<>(frame, (ageInTicks - (totalFrameTime - frame.length())));
-		}
-
-		return new KeyframeLocation<>(frames.getLast(), ageInTicks);
+		return new AnimationPoint(currentFrame, currentTick, currentFrame.length(), startValue, endValue);
 	}
 
 	/**

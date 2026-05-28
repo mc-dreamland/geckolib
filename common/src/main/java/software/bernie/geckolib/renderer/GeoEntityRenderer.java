@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import it.unimi.dsi.fastutil.Pair;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -381,6 +382,26 @@ public class GeoEntityRenderer<T extends Entity & GeoAnimatable, R extends Entit
 	@Override
 	public void renderRecursively(R renderState, PoseStack poseStack, GeoBone bone, RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
 								  boolean isReRender, int packedLight, int packedOverlay, int renderColor) {
+		boolean hasBoneTransform = RenderUtil.hasBoneRenderTransform(bone);
+
+		if (!hasBoneTransform && !bone.isTrackingMatrices()) {
+			if (!isReRender) {
+				Reference2ObjectMap<GeoBone, Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>>> perBoneTasks = getPerBoneTasks(renderState);
+
+				if (!perBoneTasks.isEmpty()) {
+					Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>> boneRenderTask = perBoneTasks.get(bone);
+
+					if (boneRenderTask != null)
+						boneRenderTask.left().setValue(poseStack.last().copy());
+				}
+			}
+
+			renderCubesOfBone(renderState, bone, poseStack, buffer, packedLight, packedOverlay, renderColor);
+			renderChildBones(renderState, bone, poseStack, renderType, bufferSource, buffer, isReRender, packedLight, packedOverlay, renderColor);
+
+			return;
+		}
+
 		poseStack.pushPose();
 		RenderUtil.translateMatrixToBone(poseStack, bone);
 		RenderUtil.translateToPivotPoint(poseStack, bone);
@@ -399,10 +420,14 @@ public class GeoEntityRenderer<T extends Entity & GeoAnimatable, R extends Entit
 		RenderUtil.translateAwayFromPivotPoint(poseStack, bone);
 
 		if (!isReRender) {
-			Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>> boneRenderTask = getPerBoneTasks(renderState).get(bone);
+			Reference2ObjectMap<GeoBone, Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>>> perBoneTasks = getPerBoneTasks(renderState);
 
-			if (boneRenderTask != null)
-				boneRenderTask.left().setValue(poseStack.last().copy());
+			if (!perBoneTasks.isEmpty()) {
+				Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>> boneRenderTask = perBoneTasks.get(bone);
+
+				if (boneRenderTask != null)
+					boneRenderTask.left().setValue(poseStack.last().copy());
+			}
 		}
 
 		renderCubesOfBone(renderState, bone, poseStack, buffer, packedLight, packedOverlay, renderColor);

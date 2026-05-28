@@ -115,10 +115,6 @@ public class AnimationProcessor<T extends GeoAnimatable> {
 			controller.beginTick(animationState, this.bones, boneSnapshots, lerpedAnimationTick);
 
 			for (BoneAnimationQueue boneAnimation : controller.getBoneAnimationQueues().values()) {
-				GeoBone bone = boneAnimation.bone();
-				BoneSnapshot snapshot = boneSnapshots.get(bone.getName());
-				BoneSnapshot initialSnapshot = bone.getInitialSnapshot();
-
 				AnimationPoint rotXPoint = boneAnimation.rotationXQueue().poll();
 				AnimationPoint rotYPoint = boneAnimation.rotationYQueue().poll();
 				AnimationPoint rotZPoint = boneAnimation.rotationZQueue().poll();
@@ -128,9 +124,19 @@ public class AnimationProcessor<T extends GeoAnimatable> {
 				AnimationPoint scaleXPoint = boneAnimation.scaleXQueue().poll();
 				AnimationPoint scaleYPoint = boneAnimation.scaleYQueue().poll();
 				AnimationPoint scaleZPoint = boneAnimation.scaleZQueue().poll();
+				boolean hasRotationPoints = rotXPoint != null && rotYPoint != null && rotZPoint != null;
+				boolean hasPositionPoints = posXPoint != null && posYPoint != null && posZPoint != null;
+				boolean hasScalePoints = scaleXPoint != null && scaleYPoint != null && scaleZPoint != null;
+
+				if (!hasRotationPoints && !hasPositionPoints && !hasScalePoints)
+					continue;
+
+				GeoBone bone = boneAnimation.bone();
+				BoneSnapshot snapshot = boneSnapshots.get(bone.getName());
+				BoneSnapshot initialSnapshot = bone.getInitialSnapshot();
 				EasingType easingType = controller.overrideEasingTypeFunction.apply(animationState);
 
-				if (rotXPoint != null && rotYPoint != null && rotZPoint != null) {
+				if (hasRotationPoints) {
 					bone.setRotX((float)EasingType.lerpWithOverride(rotXPoint, easingType, animationState) + initialSnapshot.getRotX());
 					bone.setRotY((float)EasingType.lerpWithOverride(rotYPoint, easingType, animationState) + initialSnapshot.getRotY());
 					bone.setRotZ((float)EasingType.lerpWithOverride(rotZPoint, easingType, animationState) + initialSnapshot.getRotZ());
@@ -139,7 +145,7 @@ public class AnimationProcessor<T extends GeoAnimatable> {
 					bone.markRotationAsChanged();
 				}
 
-				if (posXPoint != null && posYPoint != null && posZPoint != null) {
+				if (hasPositionPoints) {
 					bone.setPosX((float)EasingType.lerpWithOverride(posXPoint, easingType, animationState));
 					bone.setPosY((float)EasingType.lerpWithOverride(posYPoint, easingType, animationState));
 					bone.setPosZ((float)EasingType.lerpWithOverride(posZPoint, easingType, animationState));
@@ -148,7 +154,7 @@ public class AnimationProcessor<T extends GeoAnimatable> {
 					bone.markPositionAsChanged();
 				}
 
-				if (scaleXPoint != null && scaleYPoint != null && scaleZPoint != null) {
+				if (hasScalePoints) {
 					bone.setScaleX((float)EasingType.lerpWithOverride(scaleXPoint, easingType, animationState));
 					bone.setScaleY((float)EasingType.lerpWithOverride(scaleYPoint, easingType, animationState));
 					bone.setScaleZ((float)EasingType.lerpWithOverride(scaleZPoint, easingType, animationState));
@@ -165,10 +171,17 @@ public class AnimationProcessor<T extends GeoAnimatable> {
 		double resetTickLength = animationState.getData(DataTickets.BONE_RESET_TIME);
 
 		for (GeoBone bone : getRegisteredBones()) {
-			if (!bone.hasRotationChanged()) {
-				BoneSnapshot initialSnapshot = bone.getInitialSnapshot();
-				BoneSnapshot saveSnapshot = boneSnapshots.get(bone.getName());
+			boolean resetRotation = !bone.hasRotationChanged();
+			boolean resetPosition = !bone.hasPositionChanged();
+			boolean resetScale = !bone.hasScaleChanged();
 
+			if (!resetRotation && !resetPosition && !resetScale)
+				continue;
+
+			BoneSnapshot initialSnapshot = bone.getInitialSnapshot();
+			BoneSnapshot saveSnapshot = boneSnapshots.get(bone.getName());
+
+			if (resetRotation) {
 				if (saveSnapshot.isRotAnimInProgress())
 					saveSnapshot.stopRotAnim(lerpedAnimationTick);
 
@@ -207,10 +220,7 @@ public class AnimationProcessor<T extends GeoAnimatable> {
 					saveSnapshot.updateRotation(bone.getRotX(), bone.getRotY(), bone.getRotZ());
 			}
 
-			if (!bone.hasPositionChanged()) {
-				BoneSnapshot initialSnapshot = bone.getInitialSnapshot();
-				BoneSnapshot saveSnapshot = boneSnapshots.get(bone.getName());
-
+			if (resetPosition) {
 				if (saveSnapshot.isPosAnimInProgress())
 					saveSnapshot.stopPosAnim(lerpedAnimationTick);
 
@@ -224,10 +234,7 @@ public class AnimationProcessor<T extends GeoAnimatable> {
 					saveSnapshot.updateOffset(bone.getPosX(), bone.getPosY(), bone.getPosZ());
 			}
 
-			if (!bone.hasScaleChanged()) {
-				BoneSnapshot initialSnapshot = bone.getInitialSnapshot();
-				BoneSnapshot saveSnapshot = boneSnapshots.get(bone.getName());
-
+			if (resetScale) {
 				if (saveSnapshot.isScaleAnimInProgress())
 					saveSnapshot.stopScaleAnim(lerpedAnimationTick);
 
@@ -274,7 +281,7 @@ public class AnimationProcessor<T extends GeoAnimatable> {
 	 */
 	private Map<String, BoneSnapshot> updateBoneSnapshots(Map<String, BoneSnapshot> snapshots) {
 		for (GeoBone bone : getRegisteredBones()) {
-			if (!snapshots.containsKey(bone.getName()))
+			if (snapshots.get(bone.getName()) == null)
 				snapshots.put(bone.getName(), BoneSnapshot.copy(bone.getInitialSnapshot()));
 		}
 

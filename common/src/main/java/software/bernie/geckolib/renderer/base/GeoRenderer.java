@@ -265,8 +265,12 @@ public interface GeoRenderer<T extends GeoAnimatable, O, R extends GeoRenderStat
 	 */
 	default void applyRenderLayers(R renderState, PoseStack poseStack, BakedGeoModel model, @Nullable RenderType renderType, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer,
 								   int packedLight, int packedOverlay, int renderColor) {
-		for (Reference2ObjectMap.Entry<GeoBone, Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>>> perBoneTask : getPerBoneTasks(renderState).reference2ObjectEntrySet()) {
-			perBoneTask.getValue().right().runTask(renderState, poseStack, perBoneTask.getKey(), perBoneTask.getValue().left().getValue(), renderType, bufferSource, packedLight, packedOverlay, renderColor);
+		Reference2ObjectMap<GeoBone, Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>>> perBoneTasks = getPerBoneTasks(renderState);
+
+		if (!perBoneTasks.isEmpty()) {
+			for (Reference2ObjectMap.Entry<GeoBone, Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>>> perBoneTask : perBoneTasks.reference2ObjectEntrySet()) {
+				perBoneTask.getValue().right().runTask(renderState, poseStack, perBoneTask.getKey(), perBoneTask.getValue().left().getValue(), renderType, bufferSource, packedLight, packedOverlay, renderColor);
+			}
 		}
 
 		for (GeoRenderLayer<T, O, R> renderLayer : getRenderLayers()) {
@@ -310,14 +314,40 @@ public interface GeoRenderer<T extends GeoAnimatable, O, R extends GeoRenderStat
 	 */
 	default void renderRecursively(R renderState, PoseStack poseStack, GeoBone bone, RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
 								   boolean isReRender, int packedLight, int packedOverlay, int renderColor) {
+		boolean hasBoneTransform = RenderUtil.hasBoneRenderTransform(bone);
+		Reference2ObjectMap<GeoBone, Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>>> perBoneTasks = null;
+
+		if (!hasBoneTransform) {
+			if (!isReRender) {
+				perBoneTasks = getPerBoneTasks(renderState);
+
+				if (!perBoneTasks.isEmpty()) {
+					Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>> boneRenderTask = perBoneTasks.get(bone);
+
+					if (boneRenderTask != null)
+						boneRenderTask.left().setValue(poseStack.last().copy());
+				}
+			}
+
+			renderCubesOfBone(renderState, bone, poseStack, buffer, packedLight, packedOverlay, renderColor);
+			renderChildBones(renderState, bone, poseStack, renderType, bufferSource, buffer, isReRender, packedLight, packedOverlay, renderColor);
+
+			return;
+		}
+
 		poseStack.pushPose();
 		RenderUtil.prepMatrixForBone(poseStack, bone);
 
 		if (!isReRender) {
-			Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>> boneRenderTask = getPerBoneTasks(renderState).get(bone);
+			if (perBoneTasks == null)
+				perBoneTasks = getPerBoneTasks(renderState);
 
-			if (boneRenderTask != null)
-				boneRenderTask.left().setValue(poseStack.last().copy());
+			if (!perBoneTasks.isEmpty()) {
+				Pair<MutableObject<PoseStack.Pose>, PerBoneRender<R>> boneRenderTask = perBoneTasks.get(bone);
+
+				if (boneRenderTask != null)
+					boneRenderTask.left().setValue(poseStack.last().copy());
+			}
 		}
 
 		renderCubesOfBone(renderState, bone, poseStack, buffer, packedLight, packedOverlay, renderColor);
@@ -333,6 +363,12 @@ public interface GeoRenderer<T extends GeoAnimatable, O, R extends GeoRenderStat
 			return;
 
 		for (GeoCube cube : bone.getCubes()) {
+			if (!RenderUtil.hasCubeRotation(cube)) {
+				renderCube(renderState, cube, poseStack, buffer, packedLight, packedOverlay, renderColor);
+
+				continue;
+			}
+
 			poseStack.pushPose();
 			renderCube(renderState, cube, poseStack, buffer, packedLight, packedOverlay, renderColor);
 			poseStack.popPose();
