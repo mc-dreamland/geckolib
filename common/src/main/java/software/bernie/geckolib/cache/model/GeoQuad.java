@@ -52,14 +52,30 @@ public record GeoQuad(GeoVertex[] vertices, float normalX, float normalY, float 
     /**
      * Submit this texture quad to the vertex consumer
      */
-    public void render(Matrix4f pose, Vector3f normal, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int renderColor) {
-        Vector3f transformedPosition = new Vector3f();
+    public void render(Matrix4f pose, float normalX, float normalY, float normalZ, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int renderColor) {
+        float poseM00 = pose.m00();
+        float poseM01 = pose.m01();
+        float poseM02 = pose.m02();
+        float poseM10 = pose.m10();
+        float poseM11 = pose.m11();
+        float poseM12 = pose.m12();
+        float poseM20 = pose.m20();
+        float poseM21 = pose.m21();
+        float poseM22 = pose.m22();
+        float poseM30 = pose.m30();
+        float poseM31 = pose.m31();
+        float poseM32 = pose.m32();
 
         for (GeoVertex vertex : vertices()) {
-            pose.transformPosition(vertex.posX(), vertex.posY(), vertex.posZ(), transformedPosition);
+            float positionX = vertex.posX();
+            float positionY = vertex.posY();
+            float positionZ = vertex.posZ();
+            float transformedX = org.joml.Math.fma(poseM00, positionX, org.joml.Math.fma(poseM10, positionY, org.joml.Math.fma(poseM20, positionZ, poseM30)));
+            float transformedY = org.joml.Math.fma(poseM01, positionX, org.joml.Math.fma(poseM11, positionY, org.joml.Math.fma(poseM21, positionZ, poseM31)));
+            float transformedZ = org.joml.Math.fma(poseM02, positionX, org.joml.Math.fma(poseM12, positionY, org.joml.Math.fma(poseM22, positionZ, poseM32)));
 
-            vertexConsumer.addVertex(transformedPosition.x(), transformedPosition.y(), transformedPosition.z(), renderColor, vertex.texU(),
-                                     vertex.texV(), packedOverlay, packedLight, normal.x(), normal.y(), normal.z());
+            vertexConsumer.addVertex(transformedX, transformedY, transformedZ, renderColor, vertex.texU(),
+                                     vertex.texV(), packedOverlay, packedLight, normalX, normalY, normalZ);
         }
     }
 }

@@ -6,11 +6,9 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 import org.jspecify.annotations.Nullable;
 import software.bernie.geckolib.cache.model.GeoBone;
 import software.bernie.geckolib.cache.model.GeoQuad;
-import software.bernie.geckolib.util.RenderUtil;
 
 /**
  * Baked cuboid for a {@link GeoBone}
@@ -31,19 +29,43 @@ public record GeoCube(@Nullable GeoQuad[] quads, Vec3 pivot, Vec3 rotation, Vec3
             translateAwayFromPivotPoint(poseStack);
         }
 
-        Matrix3f normalisedPoseState = poseStack.last().normal();
-        Matrix4f poseState = new Matrix4f(poseStack.last().pose());
+        PoseStack.Pose currentPose = poseStack.last();
+        Matrix3f normalisedPoseState = currentPose.normal();
+        Matrix4f poseState = currentPose.pose();
+        float normalM00 = normalisedPoseState.m00();
+        float normalM01 = normalisedPoseState.m01();
+        float normalM02 = normalisedPoseState.m02();
+        float normalM10 = normalisedPoseState.m10();
+        float normalM11 = normalisedPoseState.m11();
+        float normalM12 = normalisedPoseState.m12();
+        float normalM20 = normalisedPoseState.m20();
+        float normalM21 = normalisedPoseState.m21();
+        float normalM22 = normalisedPoseState.m22();
+        boolean flat = isFlat();
 
         for (GeoQuad quad : this.quads) {
             if (quad == null)
                 continue;
 
-            Vector3f normal = normalisedPoseState.transform(quad.normalVec());
+            float baseNormalX = quad.normalX();
+            float baseNormalY = quad.normalY();
+            float baseNormalZ = quad.normalZ();
+            float normalX = org.joml.Math.fma(normalM00, baseNormalX, org.joml.Math.fma(normalM10, baseNormalY, normalM20 * baseNormalZ));
+            float normalY = org.joml.Math.fma(normalM01, baseNormalX, org.joml.Math.fma(normalM11, baseNormalY, normalM21 * baseNormalZ));
+            float normalZ = org.joml.Math.fma(normalM02, baseNormalX, org.joml.Math.fma(normalM12, baseNormalY, normalM22 * baseNormalZ));
 
-            if (isFlat())
-                RenderUtil.fixInvertedFlatCube(this, normal);
+            if (flat) {
+                if (normalX < 0 && (size().y() == 0 || size().z() == 0))
+                    normalX = -normalX;
 
-            quad.render(poseState, normal, vertexConsumer, packedLight, packedOverlay, renderColor);
+                if (normalY < 0 && (size().x() == 0 || size().z() == 0))
+                    normalY = -normalY;
+
+                if (normalZ < 0 && (size().x() == 0 || size().y() == 0))
+                    normalZ = -normalZ;
+            }
+
+            quad.render(poseState, normalX, normalY, normalZ, vertexConsumer, packedLight, packedOverlay, renderColor);
         }
 
     }
