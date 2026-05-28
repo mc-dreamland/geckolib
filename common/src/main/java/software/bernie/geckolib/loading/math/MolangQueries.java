@@ -118,6 +118,10 @@ public final class MolangQueries {
 	public static final String TIME_STAMP = "query.time_stamp";
 	public static final String VERTICAL_SPEED = "query.vertical_speed";
 	public static final String YAW_SPEED = "query.yaw_speed";
+	public static final String HAS_ARMOR_SLOT_0 = "query.has_armor_slot_0";
+	public static final String HAS_ARMOR_SLOT_1 = "query.has_armor_slot_1";
+	public static final String HAS_ARMOR_SLOT_2 = "query.has_armor_slot_2";
+	public static final String HAS_ARMOR_SLOT_3 = "query.has_armor_slot_3";
 
 	private static final Map<String, Variable> VARIABLES = new Object2ObjectOpenHashMap<>();
 	private static final Map<Variable, ToDoubleFunction<Actor<? extends GeoAnimatable>>> ACTOR_VARIABLES = new Reference2ObjectOpenHashMap<>();
@@ -326,6 +330,14 @@ public final class MolangQueries {
 		MolangQueries.<Entity>setActorVariable(RIDER_HEAD_Y_ROTATION, actor -> actor.animatable.getFirstPassenger() instanceof LivingEntity living ? living.getViewYRot(actor.partialTick) : 0);
 		MolangQueries.<Entity>setActorVariable(VERTICAL_SPEED, actor -> actor.animatable.getDeltaMovement().y);
 		MolangQueries.<Entity>setActorVariable(YAW_SPEED, actor -> actor.animatable.getYRot() - actor.animatable.yRotO);
+		MolangQueries.<Entity>setActorVariable(HAS_ARMOR_SLOT_0, actor -> hasArmorSlot(actor.animatable, EquipmentSlot.HEAD));
+		MolangQueries.<Entity>setActorVariable(HAS_ARMOR_SLOT_1, actor -> hasArmorSlot(actor.animatable, EquipmentSlot.CHEST));
+		MolangQueries.<Entity>setActorVariable(HAS_ARMOR_SLOT_2, actor -> hasArmorSlot(actor.animatable, EquipmentSlot.LEGS));
+		MolangQueries.<Entity>setActorVariable(HAS_ARMOR_SLOT_3, actor -> hasArmorSlot(actor.animatable, EquipmentSlot.FEET));
+	}
+
+	private static double hasArmorSlot(Entity entity, EquipmentSlot slot) {
+		return entity instanceof EquipmentUser equipmentUser && !equipmentUser.getItemBySlot(slot).isEmpty() ? 1 : 0;
 	}
 
 	private static void setDefaultLivingEntityQueryValues() {

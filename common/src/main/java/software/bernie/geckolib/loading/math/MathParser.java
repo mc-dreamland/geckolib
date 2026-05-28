@@ -47,6 +47,7 @@ public class MathParser {
     private static final Pattern WHITESPACE = Pattern.compile("\\s");
     private static final Pattern NUMERIC = Pattern.compile("^-?\\d+(\\.\\d+)?$");
     private static final Pattern VALID_DOUBLE = Pattern.compile("[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\d+)(\\.)?((\\d+)?)([eE][+-]?(\\d+))?)|(\\.(\\d+)([eE][+-]?(\\d+))?)|(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))[pP][+-]?(\\d+)))[fFdD]?))[\\x00-\\x20]*");
+    private static final Pattern HAS_ARMOR_SLOT_QUERY = Pattern.compile("\\b(?:q|query)\\.has_armor_slot\\s*\\(\\s*([0-3])\\s*\\)", Pattern.CASE_INSENSITIVE);
     private static final String MOLANG_RETURN = "return ";
     private static final String STATEMENT_DELIMITER = ";";
     private static final Map<String, MathFunction.Factory<?>> FUNCTION_FACTORIES = Util.make(new ConcurrentHashMap<>(18), map -> {
@@ -173,6 +174,8 @@ public class MathParser {
      * @return A compiled {@link MathValue}, ready for use
      */
     public static MathValue compileMolang(String expression) {
+        expression = HAS_ARMOR_SLOT_QUERY.matcher(expression).replaceAll("query.has_armor_slot_$1");
+
         if (expression.startsWith(MOLANG_RETURN)) {
             expression = expression.substring(MOLANG_RETURN.length());
 
